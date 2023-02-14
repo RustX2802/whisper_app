@@ -1,12 +1,14 @@
 librosa
 youtube_dl
 streamlit
-numpy
+numpy==1.23
+protobuf==3.20.1
 tqdm
 more-itertools
 transformers>=4.19.0
 ffmpeg-python
 torch
+pytorch-lightning
 tokenizers==0.12.1
 pyannote.audio==2.1.1
 pyannote.core==4.4
@@ -17,4 +19,4 @@ torchtext
 torchaudio
 datasets
 whisper @ git+https://github.com/openai/whisper.git@e90b8fa7e845ae184ed9aa0babcf3cde6f16719e
-soundfile
+soundfile==0.10.3
