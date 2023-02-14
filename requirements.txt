@@ -19,4 +19,4 @@ torchtext
 torchaudio
 datasets
 whisper @ git+https://github.com/openai/whisper.git@e90b8fa7e845ae184ed9aa0babcf3cde6f16719e
-soundfile==0.10.3
+soundfile==0.10.2
