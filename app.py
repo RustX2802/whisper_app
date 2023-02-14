@@ -51,3 +51,13 @@ def transcribe_audio_part(filename, stt_model, stt_tokenizer, myaudio, sub_start
         st.error("Sorry, seems we have a problem on our side. Please change start & end values.")
         time.sleep(3)
         st.stop()
+
+def detect_silences(audio):
+
+    # Get Decibels (dB) so silences detection depends on the audio instead of a fixed value
+    dbfs = audio.dBFS
+
+    # Get silences timestamps > 750ms
+    silence_list = silence.detect_silence(audio, min_silence_len=750, silence_thresh=dbfs-14)
+
+    return silence_list
