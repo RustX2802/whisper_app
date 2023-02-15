@@ -219,3 +219,26 @@ def transcript_from_file(stt_tokenizer, stt_model):
         # get name and launch transcription function
         filename = uploaded_file.name
         transcription(stt_tokenizer, stt_model, filename, uploaded_file)
+
+def extract_audio_from_yt_video(url):
+    
+    filename = "yt_download_" + url[-11:] + ".mp3"
+    try:
+
+        ydl_opts = {
+            'format': 'bestaudio/best',
+            'outtmpl': filename,
+            'postprocessors': [{
+                'key': 'FFmpegExtractAudio',
+                'preferredcodec': 'mp3',
+            }],
+        }
+        with st.spinner("We are extracting the audio from the video / 비디오에서 오디오를 추출하고 있습니다"):
+            with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+                ydl.download([url])
+
+    # Handle DownloadError: ERROR: unable to download video data: HTTP Error 403: Forbidden / happens sometimes
+    except DownloadError:
+        filename = None
+
+    return filename
