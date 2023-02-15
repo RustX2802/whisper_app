@@ -210,3 +210,12 @@ def load_models():
     stt_tokenizer = WhisperProcessor.from_pretrained("openai/whisper-large-v2")
 
     return stt_tokenizer, stt_model
+
+def transcript_from_file(stt_tokenizer, stt_model):
+
+    uploaded_file = st.file_uploader("Upload your file! It can be a .mp3, .mp4 or .wav / 파일을 업로드하세요! .mp3, .mp4 또는 .wav일 수 있습니다.", type=["mp3", "mp4", "wav"])
+
+    if uploaded_file is not None:
+        # get name and launch transcription function
+        filename = uploaded_file.name
+        transcription(stt_tokenizer, stt_model, filename, uploaded_file)
