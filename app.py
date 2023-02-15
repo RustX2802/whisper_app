@@ -162,3 +162,24 @@ def silences_distribution(silence_list, min_space, max_space, start, end, srt_to
                 newsilence.append(end)
 
     return newsilence
+
+def generate_regular_split_till_end(time_list, end, min_space, max_space):
+
+    # In range loop can't handle float values so we convert to int
+    int_last_value = int(time_list[-1])
+    int_end = int(end)
+
+    # Add maxspace to the last list value and add this value to the list
+    for i in range(int_last_value, int_end, max_space):
+        value = i + max_space
+        if value < end:
+            time_list.append(value)
+
+    # Fix last automatic cut
+    # If small gap (ex: 395 000, with end = 400 000)
+    if end - time_list[-1] < min_space:
+        time_list[-1] = end
+    else:
+        # If important gap (ex: 311 000 then 356 000, with end = 400 000, can't replace and then have 311k to 400k)
+        time_list.append(end)
+    return time_list
