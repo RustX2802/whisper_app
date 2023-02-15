@@ -295,3 +295,60 @@ def display_transcription(transcription, save_result, txt_text, srt_text, sub_st
     txt_text += transcription + " "  # So x seconds sentences are separated
 
     return save_result, txt_text, srt_text
+
+def transcription(stt_tokenizer, stt_model, filename, uploaded_file=None):
+
+    # If the audio comes from the YouTube extracting mode, the audio is downloaded so the uploaded_file is
+    # the same as the filename. We need to change the uploaded_file which is currently set to None
+    if uploaded_file is None:
+        uploaded_file = filename
+
+    # Get audio length of the file(s)
+    myaudio = AudioSegment.from_file(uploaded_file)
+    audio_length = myaudio.duration_seconds
+    
+    # Display audio file
+    st.audio(uploaded_file)
+
+    # Is transcription possible
+    if audio_length > 0:
+        
+        # display a button so the user can launch the transcribe process
+        transcript_btn = st.button("Transcribe / 전사해")
+
+        # if button is clicked
+        if transcript_btn:
+
+            # Transcribe process is running
+            with st.spinner("We are transcribing your audio. Please wait / 귀하의 오디오를 전사하고 있습니다. 기다리세요"):
+
+                # Init variables
+                start = 0
+                end = audio_length
+                txt_text, srt_text, save_result = init_transcription(start, int(end))
+                srt_token = False
+                min_space = 10000
+                max_space = 30000
+
+
+                # Non Diarization Mode
+                filename = "../data/" + filename
+                
+                # Transcribe process with Non Diarization Mode
+                save_result, txt_text, srt_text = transcription_non_diarization(filename, myaudio, start, end, srt_token, stt_model, stt_tokenizer, min_space, max_space, save_result, txt_text, srt_text)
+
+                # Delete files
+                clean_directory("../data")  # clean folder that contains generated files
+
+                # Display the final transcript
+                if txt_text != "":
+                    st.subheader("Final text is / 최종 텍스트는")
+                    st.write(txt_text)
+
+                else:
+                    st.write("Transcription impossible, a problem occurred with your audio or your parameters, we apologize :( / 녹음이 불가능합니다. 오디오 또는 매개변수에 문제가 발생했습니다. 죄송합니다 :(")
+
+    else:
+        st.error("Seems your audio is 0 s long, please change your file / 오디오 길이가 0초인 것 같습니다. 파일을 변경하세요.")
+        time.sleep(3)
+        st.stop()
