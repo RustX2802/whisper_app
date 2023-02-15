@@ -183,3 +183,8 @@ def generate_regular_split_till_end(time_list, end, min_space, max_space):
         # If important gap (ex: 311 000 then 356 000, with end = 400 000, can't replace and then have 311k to 400k)
         time_list.append(end)
     return time_list
+
+def clean_directory(path):
+
+    for file in os.listdir(path):
+        os.remove(os.path.join(path, file))
