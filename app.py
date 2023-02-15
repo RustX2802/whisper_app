@@ -262,3 +262,25 @@ def init_transcription(start, end):
     srt_text = ""
     save_result = []
     return txt_text, srt_text, save_result
+
+def transcription_non_diarization(filename, myaudio, start, end, srt_token, stt_model, stt_tokenizer, min_space, max_space, save_result, txt_text, srt_text):
+    
+    # get silences
+    silence_list = detect_silences(myaudio)
+    if silence_list != []:
+        silence_list = get_middle_silence_time(silence_list)
+        silence_list = silences_distribution(silence_list, min_space, max_space, start, end, srt_token)
+    else:
+        silence_list = generate_regular_split_till_end(silence_list, int(end), min_space, max_space)
+
+    # Transcribe each audio chunk (from timestamp to timestamp) and display transcript
+    for i in range(0, len(silence_list) - 1):
+        sub_start = silence_list[i]
+        sub_end = silence_list[i + 1]
+
+        transcription = transcribe_audio_part(filename, stt_model, stt_tokenizer, myaudio, sub_start, sub_end, i)
+        
+        if transcription != "":
+            save_result, txt_text, srt_text = display_transcription(transcription, save_result, txt_text, srt_text, sub_start, sub_end)
+
+    return save_result, txt_text, srt_text
