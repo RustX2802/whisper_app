@@ -352,3 +352,14 @@ def transcription(stt_tokenizer, stt_model, filename, uploaded_file=None):
         st.error("Seems your audio is 0 s long, please change your file / 오디오 길이가 0초인 것 같습니다. 파일을 변경하세요.")
         time.sleep(3)
         st.stop()
+
+if __name__ == '__main__':
+    config()
+    choice = st.radio("Features / 특징", ["By a video URL / 비디오 URL로", "By uploading a file / 파일을 업로드하여"]) 
+
+    stt_tokenizer, stt_model = load_models()
+    if choice == "By a video URL / 비디오 URL로":
+        transcript_from_url(stt_tokenizer, stt_model)
+
+    elif choice == "By uploading a file / 파일을 업로드하여":
+        transcript_from_file(stt_tokenizer, stt_model)
