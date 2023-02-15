@@ -48,7 +48,7 @@ def transcribe_audio_part(filename, stt_model, stt_tokenizer, myaudio, sub_start
 
     except audioread.NoBackendError:
         # Means we have a chunk with a [value1 : value2] case with value1>value2
-        st.error("Sorry, seems we have a problem on our side. Please change start & end values.")
+        st.error("Sorry, seems we have a problem on our side. Please change start & end values. / 죄송합니다! 문제가 있는 것 같습니다. 시작 및 종료 값을 변경하십시오.")
         time.sleep(3)
         st.stop()
 
@@ -188,3 +188,16 @@ def clean_directory(path):
 
     for file in os.listdir(path):
         os.remove(os.path.join(path, file))
+
+def config():
+
+    st.set_page_config(page_title="Speech to Text / 음성을 텍스트로", page_icon="📝")
+    
+    # Create a data directory to store our audio files
+    if not os.path.exists("../data"):
+        os.makedirs("../data")
+    
+    # Display Text and CSS
+    st.title("Speech to Text App / 음성을 텍스트로 앱 📝")
+
+    st.subheader("You want to extract text from an audio/video? You are in the right place! / 오디오/비디오에서 텍스트를 추출하고 싶습니까? 당신은 바로 이곳에 있습니다!")
