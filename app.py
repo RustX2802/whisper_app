@@ -10,7 +10,6 @@ import whisper
 from pydub import AudioSegment, silence
 import youtube_dl
 from youtube_dl import DownloadError
-from IPython.display import Audio
 
 # Others
 import pandas as pd
@@ -202,7 +201,7 @@ def config():
 
     st.subheader("You want to extract text from an audio/video? You are in the right place! / 오디오/비디오에서 텍스트를 추출하고 싶습니까? 당신은 바로 이곳에 있습니다!")
 
-@st.cache(allow_output_mutation=True)
+@st.cache_resource
 def load_models():
 
     # Load Whisper (Transcriber model)
