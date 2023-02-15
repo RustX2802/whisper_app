@@ -254,3 +254,11 @@ def transcript_from_url(stt_tokenizer, stt_model):
             transcription(stt_tokenizer, stt_model, filename)
         else:
             st.error("We were unable to extract the audio. Please verify your link, retry or choose another video / 오디오를 추출할 수 없습니다. 링크를 확인하고 다시 시도하거나 다른 동영상을 선택하세요.")
+
+def init_transcription(start, end):
+    
+    st.write("Transcription between", start, "and", end, "seconds in process. / "start, "및", end, "초 사이의 전사가 진행 중입니다.\n\n")
+    txt_text = ""
+    srt_text = ""
+    save_result = []
+    return txt_text, srt_text, save_result
