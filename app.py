@@ -201,3 +201,12 @@ def config():
     st.title("Speech to Text App / 음성을 텍스트로 앱 📝")
 
     st.subheader("You want to extract text from an audio/video? You are in the right place! / 오디오/비디오에서 텍스트를 추출하고 싶습니까? 당신은 바로 이곳에 있습니다!")
+
+@st.cache(allow_output_mutation=True)
+def load_models():
+
+    # Load Whisper (Transcriber model)
+    stt_model = WhisperForConditionalGeneration.from_pretrained("openai/whisper-large-v2")
+    stt_tokenizer = WhisperProcessor.from_pretrained("openai/whisper-large-v2")
+
+    return stt_tokenizer, stt_model
