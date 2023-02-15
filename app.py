@@ -81,3 +81,84 @@ def get_middle_silence_time(silence_list):
             index += 2
 
     return silence_list
+
+def silences_distribution(silence_list, min_space, max_space, start, end, srt_token=False):
+
+    # If starts != 0, we need to adjust end value since silences detection is performed on the trimmed/cut audio
+    # (and not on the original audio) (ex: trim audio from 20s to 2m will be 0s to 1m40 = 2m-20s)
+
+    # Shift the end according to the start value
+    end -= start
+    start = 0
+    end *= 1000
+
+    # Step 1 - Add start value
+    newsilence = [start]
+
+    # Step 2 - Create a regular distribution between start and the first element of silence_list to don't have a gap > max_space and run out of memory
+    # example newsilence = [0] and silence_list starts with 100000 => It will create a massive gap [0, 100000]
+
+    if silence_list[0] - max_space > newsilence[0]:
+        for i in range(int(newsilence[0]), int(silence_list[0]), max_space):  # int bc float can't be in a range loop
+            value = i + max_space
+            if value < silence_list[0]:
+                newsilence.append(value)
+
+    # Step 3 - Create a regular distribution until the last value of the silence_list
+    min_desired_value = newsilence[-1]
+    max_desired_value = newsilence[-1]
+    nb_values = len(silence_list)
+
+    while nb_values != 0:
+        max_desired_value += max_space
+
+        # Get a window of the values greater than min_desired_value and lower than max_desired_value
+        silence_window = list(filter(lambda x: min_desired_value < x <= max_desired_value, silence_list))
+
+        if silence_window != []:
+            # Get the nearest value we can to min_desired_value or max_desired_value depending on srt_token
+            if srt_token:
+                nearest_value = min(silence_window, key=lambda x: abs(x - min_desired_value))
+                nb_values -= silence_window.index(nearest_value) + 1  # (index begins at 0, so we add 1)
+            else:
+                nearest_value = min(silence_window, key=lambda x: abs(x - max_desired_value))
+                # Max value index = len of the list
+                nb_values -= len(silence_window)
+
+            # Append the nearest value to our list
+            newsilence.append(nearest_value)
+
+        # If silence_window is empty we add the max_space value to the last one to create an automatic cut and avoid multiple audio cutting
+        else:
+            newsilence.append(newsilence[-1] + max_space)
+
+        min_desired_value = newsilence[-1]
+        max_desired_value = newsilence[-1]
+
+    # Step 4 - Add the final value (end)
+
+    if end - newsilence[-1] > min_space:
+        # Gap > Min Space
+        if end - newsilence[-1] < max_space:
+            newsilence.append(end)
+        else:
+            # Gap too important between the last list value and the end value
+            # We need to create automatic max_space cut till the end
+            newsilence = generate_regular_split_till_end(newsilence, end, min_space, max_space)
+    else:
+        # Gap < Min Space <=> Final value and last value of new silence are too close, need to merge
+        if len(newsilence) >= 2:
+            if end - newsilence[-2] <= max_space:
+                # Replace if gap is not too important
+                newsilence[-1] = end
+            else:
+                newsilence.append(end)
+
+        else:
+            if end - newsilence[-1] <= max_space:
+                # Replace if gap is not too important
+                newsilence[-1] = end
+            else:
+                newsilence.append(end)
+
+    return newsilence
