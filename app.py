@@ -61,3 +61,23 @@ def detect_silences(audio):
     silence_list = silence.detect_silence(audio, min_silence_len=750, silence_thresh=dbfs-14)
 
     return silence_list
+
+def get_middle_silence_time(silence_list):
+
+    length = len(silence_list)
+    index = 0
+    while index < length:
+        diff = (silence_list[index][1] - silence_list[index][0])
+        if diff < 3500:
+            silence_list[index] = silence_list[index][0] + diff/2
+            index += 1
+        else:
+
+            adapted_diff = 1500
+            silence_list.insert(index+1, silence_list[index][1] - adapted_diff)
+            silence_list[index] = silence_list[index][0] + adapted_diff
+
+            length += 1
+            index += 2
+
+    return silence_list
