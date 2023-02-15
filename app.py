@@ -284,3 +284,14 @@ def transcription_non_diarization(filename, myaudio, start, end, srt_token, stt_
             save_result, txt_text, srt_text = display_transcription(transcription, save_result, txt_text, srt_text, sub_start, sub_end)
 
     return save_result, txt_text, srt_text
+
+def display_transcription(transcription, save_result, txt_text, srt_text, sub_start, sub_end):
+
+    temp_timestamps = str(timedelta(milliseconds=sub_start)).split(".")[0] + " --> " + str(timedelta(milliseconds=sub_end)).split(".")[0] + "\n"        
+    temp_list = [temp_timestamps, transcription, int(sub_start / 1000)]
+    save_result.append(temp_list)
+    st.write(temp_timestamps)    
+    st.write(transcription + "\n\n")
+    txt_text += transcription + " "  # So x seconds sentences are separated
+
+    return save_result, txt_text, srt_text
