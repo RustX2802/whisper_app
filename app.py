@@ -257,7 +257,7 @@ def transcript_from_url(stt_tokenizer, stt_model):
 
 def init_transcription(start, end):
     
-    st.write("Transcription between", start, "and", end, "seconds in process. / "start, "및", end, "초 사이의 전사가 진행 중입니다.\n\n")
+    st.write("Transcription between", start, "and", end, "seconds in process.\n\n")
     txt_text = ""
     srt_text = ""
     save_result = []
