@@ -189,6 +189,23 @@ def config():
     # Display Text and CSS
     st.title("Speech to Text App / 음성을 텍스트로 앱 📝")
 
+    st.markdown("""
+                    <style>
+                    .block-container.css-12oz5g7.egzxvld2{
+                        padding: 1%;}
+                   
+                    .stRadio > label:nth-child(1){
+                        font-weight: bold;
+                        }
+                    .stRadio > div{flex-direction:row;}
+                    p, span{ 
+                        text-align: justify;
+                    }
+                    span{ 
+                        text-align: center;
+                    }
+                    """, unsafe_allow_html=True)
+
     st.subheader("You want to extract text from an audio/video? You are in the right place! / 오디오/비디오에서 텍스트를 추출하고 싶습니까? 당신은 바로 이곳에 있습니다!")
 
 @st.cache_resource
