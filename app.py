@@ -350,6 +350,7 @@ def transcription(stt_tokenizer, stt_model, filename, uploaded_file=None):
                 if txt_text != "":
                     st.subheader("Final text is / 최종 텍스트는")
                     st.write(txt_text)
+                    st.download_button("Download as TXT / TXT로 다운로드", txt_text, file_name="my_transcription.txt")
 
                 else:
                     st.write("Transcription impossible, a problem occurred with your audio or your parameters, we apologize :( / 녹음이 불가능합니다. 오디오 또는 매개변수에 문제가 발생했습니다. 죄송합니다 :(")
