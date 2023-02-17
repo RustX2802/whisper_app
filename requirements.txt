@@ -1,4 +1,3 @@
-librosa
 youtube_dl
 streamlit
 numpy==1.23
@@ -16,7 +15,5 @@ pydub==0.25.1
 sentencepiece==0.1.96
 torchmetrics
 torchtext
-torchaudio
 datasets
 whisper @ git+https://github.com/openai/whisper.git@e90b8fa7e845ae184ed9aa0babcf3cde6f16719e
-soundfile==0.10.2

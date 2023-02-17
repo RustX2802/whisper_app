@@ -5,8 +5,6 @@ from pyannote.audio import Pipeline
 
 # Audio Manipulation
 import audioread
-import librosa
-import whisper
 from pydub import AudioSegment, silence
 import youtube_dl
 from youtube_dl import DownloadError
@@ -19,35 +17,27 @@ import streamlit as st
 import time
 
 def transcribe_audio_part(filename, stt_model, stt_tokenizer, myaudio, sub_start, sub_end, index):
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    device = 0 if torch.cuda.is_available() else "cpu"
     try:
         with torch.no_grad():
             new_audio = myaudio[sub_start:sub_end]  # Works in milliseconds
             path = filename[:-3] + "audio_" + str(index) + ".mp3"
             new_audio.export(path)  # Exports to a mp3 file in the current path
+            
+            pipe = pipeline(
+                task="automatic-speech-recognition",
+                model="openai/whisper-large-v2",
+                chunk_length_s=30,
+                device=device,
+            )
 
-            # Load audio file with librosa, set sound rate to 16000 Hz because the model we use was trained on 16000 Hz data
-            input_audio, _ = librosa.load(path, sr=16000)
-
-            # return PyTorch torch.Tensor instead of a list of python integers thanks to return_tensors = ‘pt’
-            input_values = stt_tokenizer(input_audio, return_tensors="pt").to(device).input_values
-
-            # Get logits from the data structure containing all the information returned by the model and get our prediction
-            logits = stt_model.to(device)(input_values).logits
-            prediction = torch.argmax(logits, dim=-1)
-           
             # Decode & lower our string (model's output is only uppercase)
-            if isinstance(stt_tokenizer, Wav2Vec2Tokenizer):
-                transcription = stt_tokenizer.batch_decode(prediction)[0]
-            elif isinstance(stt_tokenizer, Wav2Vec2Processor):
-                transcription = stt_tokenizer.decode(prediction[0])
-
-            # return transcription
-            return transcription.lower()
+            transcript = pipe(path)["text"]
+            return transcript
 
     except audioread.NoBackendError:
         # Means we have a chunk with a [value1 : value2] case with value1>value2
-        st.error("Sorry, seems we have a problem on our side. Please change start & end values. / 죄송합니다! 문제가 있는 것 같습니다. 시작 및 종료 값을 변경하십시오.")
+        st.error("Sorry, seems we have a problem on our side. Please change start & end values.")
         time.sleep(3)
         st.stop()
 
