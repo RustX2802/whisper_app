@@ -379,7 +379,7 @@ def transcription(stt_tokenizer, stt_model, filename, uploaded_file=None):
                     # Save txt_text
                     update_session_state("txt_transcript", txt_text)
                     st.write(txt_text)
-                    st.download_button("Download as TXT / TXT로 다운로드", txt_text, file_name="my_transcription.txt")
+                    st.download_button("Download as TXT / TXT로 다운로드", txt_text, file_name="my_transcription.txt", on_click=update_session_state, args=("page_index", 1,))
 
                 else:
                     st.write("Transcription impossible, a problem occurred with your audio or your parameters, we apologize :( / 녹음이 불가능합니다. 오디오 또는 매개변수에 문제가 발생했습니다. 죄송합니다 :(")
