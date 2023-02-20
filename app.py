@@ -391,11 +391,20 @@ def transcription(stt_tokenizer, stt_model, filename, uploaded_file=None):
 
 if __name__ == '__main__':
     config()
-    choice = st.radio("Features / 특징", ["By a video URL / 비디오 URL로", "By uploading a file / 파일을 업로드하여"]) 
 
-    stt_tokenizer, stt_model = load_models()
-    if choice == "By a video URL / 비디오 URL로":
-        transcript_from_url(stt_tokenizer, stt_model)
+    # Default page
+    if st.session_state['page_index'] == 0:
+        choice = st.radio("Features / 특징", ["By a video URL / 비디오 URL로", "By uploading a file / 파일을 업로드하여"]) 
 
-    elif choice == "By uploading a file / 파일을 업로드하여":
-        transcript_from_file(stt_tokenizer, stt_model)
+        stt_tokenizer, stt_model = load_models()
+
+        if choice == "By a video URL / 비디오 URL로":
+            transcript_from_url(stt_tokenizer, stt_model)
+
+        elif choice == "By uploading a file / 파일을 업로드하여":
+            transcript_from_file(stt_tokenizer, stt_model)
+
+    # Results page
+    elif st.session_state['page_index'] == 1:
+        # Display Results page
+        display_results()
