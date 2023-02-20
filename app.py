@@ -326,14 +326,14 @@ def display_transcription(transcription, save_result, txt_text, srt_text, sub_st
 def display_results():
 
     st.button("Load another file / 다른 파일을 로드하세요", on_click=update_session_state, args=("page_index", 0,))
-    st.audio(st.session_state['audio_file'])
+    st.audio(st.session_state['audio_file'], start_time=st.session_state["start_time"])
 
     # Display results of transcription by steps
     if st.session_state["process"] != []:
         for elt in (st.session_state['process']):
 
             # Timestamp
-            st.write(elt[0])
+            st.button(elt[0], on_click=update_session_state, args=("start_time", elt[2],))
 
             # Transcript for this timestamp
             st.write(elt[1])
