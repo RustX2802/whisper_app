@@ -322,6 +322,28 @@ def display_transcription(transcription, save_result, txt_text, srt_text, sub_st
 
     return save_result, txt_text, srt_text
 
+def display_results():
+
+    st.button("Load another file / 다른 파일을 로드하세요", on_click=update_session_state, args=("page_index", 0,))
+    st.audio(st.session_state['audio_file'])
+
+    # Display results of transcription by steps
+    if st.session_state["process"] != []:
+        for elt in (st.session_state['process']):
+
+            # Timestamp
+            st.write(elt[0])
+
+            # Transcript for this timestamp
+            st.write(elt[1])
+
+    # Display final text
+    st.subheader("Final text is / 최종 텍스트는")
+    st.write(st.session_state["txt_transcript"])
+    
+    # Download your transcription.txt
+    st.download_button("Download as TXT / TXT로 다운로드", st.session_state["txt_transcript"], file_name="my_transcription.txt")
+
 def transcription(stt_tokenizer, stt_model, filename, uploaded_file=None):
 
     # If the audio comes from the YouTube extracting mode, the audio is downloaded so the uploaded_file is
