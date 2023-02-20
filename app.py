@@ -216,6 +216,63 @@ def config():
 
     st.subheader("You want to extract text from an audio/video? You are in the right place! / 오디오/비디오에서 텍스트를 추출하고 싶습니까? 당신은 바로 이곳에 있습니다!")
 
+def load_options(audio_length, dia_pipeline):
+    """
+    Display options so the user can customize the result (summarize the transcript ? trim the audio? ...)
+    User can choose his parameters thanks to sliders & checkboxes, both displayed in a st.form so the page doesn't
+    reload when interacting with an element (frustrating if it does because user loses fluidity).
+    :return: the chosen parameters
+    """
+    # Create a st.form()
+    with st.form("form"):
+        st.markdown("""<h6>
+            You can transcript a specific part of your audio by setting start and end values below (in seconds). Then, 
+            choose your parameters. / 아래의 시작 및 종료 값(초 단위)을 설정하여 오디오의 특정 부분을 전사할 수 있습니다. 그런 다음 매개변수를 선택하세요.</h6>""", unsafe_allow_html=True)
+
+        # Possibility to trim / cut the audio on a specific part (=> transcribe less seconds will result in saving time)
+        # To perform that, user selects his time intervals thanks to sliders, displayed in 2 different columns
+        col1, col2 = st.columns(2)
+        with col1:
+            start = st.slider("Start value (s) / 시작 값(초)", 0, audio_length, value=0)
+        with col2:
+            end = st.slider("End value (s) / 종료 값(초)", 0, audio_length, value=audio_length)
+
+        # Create 3 new columns to displayed other options
+        col1, col2, col3 = st.columns(3)
+
+        # User selects his preferences with checkboxes
+        with col1:
+            # Differentiate Speakers
+            if dia_pipeline == None:
+                st.write("Diarization model unavailable / 분할 모델을 사용할 수 없음")
+                diarization_token = False
+            else:
+                diarization_token = st.checkbox("Differentiate speakers / 스피커를 차별화하세요")
+
+        with col2:
+            # Summarize the transcript
+            summarize_token = st.checkbox("Generate a summary / 요약을 생성하세요", value=False)
+
+            # Generate a SRT file instead of a TXT file (shorter timestamps)
+            srt_token = st.checkbox("Generate subtitles file / 자막 파일 생성하세요", value=False)
+
+        with col3:
+            # Display the timestamp of each transcribed part
+            timestamps_token = st.checkbox("Show timestamps / 타임스탬프를 보여주세요", value=True)
+
+            # Improve transcript with another model (better transcript but longer to obtain)
+            choose_better_model = st.checkbox("Change STT Model / STT 모델을 변경하세요")
+
+        # Srt option requires timestamps so it can match text with time => Need to correct the following case
+        if not timestamps_token and srt_token:
+            timestamps_token = True
+            st.warning("Srt option requires timestamps. We activated it for you. / Srt 옵션에는 타임스탬프가 필요합니다. 우리는 당신을 위해 그것을 활성화했습니다.")
+
+        # Validate choices with a button
+        transcript_btn = st.form_submit_button("Transcribe audio! / 오디오를 전사하세요!")
+
+    return transcript_btn, start, end, diarization_token, timestamps_token, srt_token, summarize_token, choose_better_model
+
 def update_session_state(var, data, concatenate_token=False):
     """
     A simple function to update a session state variable
@@ -376,7 +433,7 @@ def transcription(stt_tokenizer, stt_model, filename, uploaded_file=None):
     if audio_length > 0:
         
         # display a button so the user can launch the transcribe process
-        transcript_btn = st.button("Transcribe / 전사해")
+        transcript_btn = st.button("Transcribe / 전사하세요")
 
         # if button is clicked
         if transcript_btn:
