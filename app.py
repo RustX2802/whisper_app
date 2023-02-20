@@ -185,6 +185,13 @@ def config():
     # Create a data directory to store our audio files
     if not os.path.exists("../data"):
         os.makedirs("../data")
+
+    # Initialize session state variables
+    if 'page_index' not in st.session_state:
+        st.session_state['audio_file'] = None
+        st.session_state["process"] = []
+        st.session_state['txt_transcript'] = ""
+        st.session_state["page_index"] = 0
     
     # Display Text and CSS
     st.title("Speech to Text App / 음성을 텍스트로 앱 📝")
