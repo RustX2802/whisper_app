@@ -317,7 +317,7 @@ def display_transcription(transcription, save_result, txt_text, srt_text, sub_st
     temp_timestamps = str(timedelta(milliseconds=sub_start)).split(".")[0] + " --> " + str(timedelta(milliseconds=sub_end)).split(".")[0] + "\n"        
     temp_list = [temp_timestamps, transcription, int(sub_start / 1000)]
     save_result.append(temp_list)
-    st.write(temp_timestamps)    
+    st.button(temp_timestamps, on_click=click_timestamp_btn, args=(sub_start,))    
     st.write(transcription + "\n\n")
     txt_text += transcription + " "  # So x seconds sentences are separated
 
