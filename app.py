@@ -192,6 +192,7 @@ def config():
         st.session_state["process"] = []
         st.session_state['txt_transcript'] = ""
         st.session_state["page_index"] = 0
+        st.session_state["start_time"] = 0
     
     # Display Text and CSS
     st.title("Speech to Text App / 음성을 텍스트로 앱 📝")
@@ -343,6 +344,16 @@ def display_results():
     
     # Download your transcription.txt
     st.download_button("Download as TXT / TXT로 다운로드", st.session_state["txt_transcript"], file_name="my_transcription.txt")
+
+def click_timestamp_btn(sub_start):
+    """
+    When user clicks a Timestamp button, we go to the display results page and st.audio is set to the sub_start value)
+    It allows the user to listen to the considered part of the audio
+    :param sub_start: Beginning of the considered transcript (ms)
+    """
+
+    update_session_state("page_index", 1)
+    update_session_state("start_time", int(sub_start / 1000)) # division to convert ms to s
 
 def transcription(stt_tokenizer, stt_model, filename, uploaded_file=None):
 
