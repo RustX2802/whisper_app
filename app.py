@@ -336,6 +336,9 @@ def transcription(stt_tokenizer, stt_model, filename, uploaded_file=None):
     # Display audio file
     st.audio(uploaded_file)
 
+    # Save Audio so it is not lost when we interact with a button (so we can display it on the results page)
+    update_session_state("audio_file", uploaded_file)
+
     # Is transcription possible
     if audio_length > 0:
         
@@ -363,12 +366,18 @@ def transcription(stt_tokenizer, stt_model, filename, uploaded_file=None):
                 # Transcribe process with Non Diarization Mode
                 save_result, txt_text, srt_text = transcription_non_diarization(filename, myaudio, start, end, srt_token, stt_model, stt_tokenizer, min_space, max_space, save_result, txt_text, srt_text)
 
+                # Save results
+                update_session_state("process", save_result)
+
                 # Delete files
                 clean_directory("../data")  # clean folder that contains generated files
 
                 # Display the final transcript
                 if txt_text != "":
                     st.subheader("Final text is / 최종 텍스트는")
+
+                    # Save txt_text
+                    update_session_state("txt_transcript", txt_text)
                     st.write(txt_text)
                     st.download_button("Download as TXT / TXT로 다운로드", txt_text, file_name="my_transcription.txt")
 
