@@ -215,6 +215,19 @@ def config():
 
     st.subheader("You want to extract text from an audio/video? You are in the right place! / 오디오/비디오에서 텍스트를 추출하고 싶습니까? 당신은 바로 이곳에 있습니다!")
 
+def update_session_state(var, data, concatenate_token=False):
+    """
+    A simple function to update a session state variable
+    :param var: variable's name
+    :param data: new value of the variable
+    :param concatenate_token: do we replace or concatenate
+    """
+
+    if concatenate_token:
+        st.session_state[var] += data
+    else:
+        st.session_state[var] = data
+
 @st.cache_resource
 def load_models():
 
