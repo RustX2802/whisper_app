@@ -447,6 +447,29 @@ def convert_file_to_wav(aud_seg, filename):
 
     return newaudio, filename
 
+def get_diarization(dia_pipeline, filename):
+    """
+    Diarize an audio (find number of speakers, when they speak, ...)
+    :param dia_pipeline: Pyannote's library (diarization pipeline)
+    :param filename: name of a wav audio file
+    :return: str list containing audio's diarization time intervals
+    """
+    # Get diarization of the audio
+    diarization = dia_pipeline({'audio': filename})
+    listmapping = diarization.labels()
+    listnewmapping = []
+
+    # Rename default speakers' names (Default is A, B, ...), we want Speaker0, Speaker1, ...
+    number_of_speakers = len(listmapping)
+    for i in range(number_of_speakers):
+        listnewmapping.append("Speaker" + str(i))
+
+    mapping_dict = dict(zip(listmapping, listnewmapping))
+    diarization.rename_labels(mapping_dict, copy=False)
+    # copy set to False so we don't create a new annotation, we replace the actual one
+
+    return diarization, number_of_speakers
+
 def display_results():
 
     st.button("Load another file / 다른 파일을 로드하세요", on_click=update_session_state, args=("page_index", 0,))
