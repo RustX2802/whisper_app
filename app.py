@@ -555,6 +555,16 @@ def get_diarization(dia_pipeline, filename):
 
     return diarization, number_of_speakers
 
+def confirm_token_change(hf_token, page_index):
+    """
+    A function that saves the hugging face token entered by the user.
+    It also updates the page index variable so we can indicate we now want to display the home page instead of the token page
+    :param hf_token: user's token
+    :param page_index: number that represents the home page index (mentioned in the main.py file)
+    """
+    update_session_state("my_HF_token", hf_token)
+    update_session_state("page_index", page_index)
+
 def convert_str_diarlist_to_timedelta(diarization_result):
     """
     Extract from Diarization result the given speakers with their respective speaking times and transform them in pandas timedelta objects
