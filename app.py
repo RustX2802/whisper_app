@@ -470,6 +470,26 @@ def get_diarization(dia_pipeline, filename):
 
     return diarization, number_of_speakers
 
+def convert_str_diarlist_to_timedelta(diarization_result):
+    """
+    Extract from Diarization result the given speakers with their respective speaking times and transform them in pandas timedelta objects
+    :param diarization_result: result of diarization
+    :return: list with timedelta intervals and their respective speaker
+    """
+
+    # get speaking intervals from diarization
+    segments = diarization_result.for_json()["content"]
+    diarization_timestamps = []
+    for sample in segments:
+        # Convert segment in a pd.Timedelta object
+        new_seg = [pd.Timedelta(seconds=round(sample["segment"]["start"], 2)),
+                   pd.Timedelta(seconds=round(sample["segment"]["end"], 2)), sample["label"]]
+        # Start and end = speaking duration
+        # label = who is speaking
+        diarization_timestamps.append(new_seg)
+
+    return diarization_timestamps
+
 def display_results():
 
     st.button("Load another file / 다른 파일을 로드하세요", on_click=update_session_state, args=("page_index", 0,))
