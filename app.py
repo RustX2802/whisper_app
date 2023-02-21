@@ -607,6 +607,29 @@ def click_timestamp_btn(sub_start):
     update_session_state("page_index", 1)
     update_session_state("start_time", int(sub_start / 1000)) # division to convert ms to s
 
+def diarization_treatment(filename, dia_pipeline, max_space, srt_token):
+    """
+    Launch the whole diarization process to get speakers time intervals as pandas timedelta objects
+    :param filename: name of the audio file
+    :param dia_pipeline: Diarization Model (Differentiate speakers)
+    :param max_space: Maximum temporal distance between two silences
+    :param srt_token: Enable/Disable generate srt file (choice fixed by user)
+    :return: speakers time intervals list and number of different detected speakers
+    """
+    
+    # initialization
+    diarization_timestamps = []
+
+    # whole diarization process
+    diarization, number_of_speakers = get_diarization(dia_pipeline, filename)
+
+    if len(diarization) > 0:
+        diarization_timestamps = convert_str_diarlist_to_timedelta(diarization)
+        diarization_timestamps = merge_speaker_times(diarization_timestamps, max_space, srt_token)
+        diarization_timestamps = extending_timestamps(diarization_timestamps)
+
+    return diarization_timestamps, number_of_speakers
+
 def transcription(stt_tokenizer, stt_model, filename, uploaded_file=None):
 
     # If the audio comes from the YouTube extracting mode, the audio is downloaded so the uploaded_file is
