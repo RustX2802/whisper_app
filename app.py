@@ -199,7 +199,7 @@ def config():
         st.session_state["number_of_speakers"] = 0  # Save the number of speakers detected in the conversation (diarization)
         st.session_state["chosen_mode"] = 0  # Save the mode chosen by the user (Diarization or not, timestamps or not)
         st.session_state["btn_token_list"] = []  # List of tokens that indicates what options are activated to adapt the display on results page
-        st.session_state["my_HF_token"] = "ACCESS_TOKEN_GOES_HERE"  # User's Token that allows the use of the diarization model
+        st.session_state["my_HF_token"] = "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"  # User's Token that allows the use of the diarization model
         st.session_state["disable"] = True  # Default appearance of the button to change your token
     
     # Display Text and CSS
@@ -298,10 +298,32 @@ def update_session_state(var, data, concatenate_token=False):
 def load_models():
 
     # Load Whisper (Transcriber model)
-    stt_model = WhisperForConditionalGeneration.from_pretrained("openai/whisper-large-v2")
-    stt_tokenizer = WhisperProcessor.from_pretrained("openai/whisper-large-v2")
+    with st.spinner("Loading Speech to Text Model / 음성을 텍스트 모델로 로드 중"):
+        try:
+            stt_tokenizer = pickle.load(open("models/STT_processor_whisper-large-v2.sav", 'rb'))
+        except FileNotFoundError:
+            stt_tokenizer = WhisperProcessor.from_pretrained("openai/whisper-large-v2")
 
-    return stt_tokenizer, stt_model
+        try:
+            stt_model = pickle.load(open("models/STT_model_whisper-large-v2.sav", 'rb'))
+        except FileNotFoundError:
+            stt_model = WhisperForConditionalGeneration.from_pretrained("openai/whisper-large-v2")
+
+    # Load summarizer model
+    with st.spinner("Loading Summarization Model / 요약 모델 로드 중"):
+        try:
+            summarizer = pickle.load(open("models/summarizer.sav", 'rb'))
+        except FileNotFoundError:
+            summarizer = BartForConditionalGeneration.from_pretrained("ainize/kobart-news")
+
+    # Load Diarization model (Differentiate speakers)
+    with st.spinner("Loading Diarization Model / 분할 모델 로드 중"):
+        try:
+            dia_pipeline = pickle.load(open("models/dia_pipeline.sav", 'rb'))
+        except FileNotFoundError:
+            dia_pipeline = Pipeline.from_pretrained("pyannote/speaker-diarization@2.1", use_auth_token=st.session_state["my_HF_token"])
+
+    return stt_tokenizer, stt_model, summarizer, dia_pipeline
 
 def transcript_from_file(stt_tokenizer, stt_model):
 
@@ -494,7 +516,7 @@ if __name__ == '__main__':
     if st.session_state['page_index'] == 0:
         choice = st.radio("Features / 특징", ["By a video URL / 비디오 URL로", "By uploading a file / 파일을 업로드하여"]) 
 
-        stt_tokenizer, stt_model = load_models()
+        stt_tokenizer, stt_model, summarizer, dia_pipeline = load_models()
 
         if choice == "By a video URL / 비디오 URL로":
             transcript_from_url(stt_tokenizer, stt_model)
