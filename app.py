@@ -193,6 +193,14 @@ def config():
         st.session_state['txt_transcript'] = ""
         st.session_state["page_index"] = 0
         st.session_state["start_time"] = 0
+        st.session_state['srt_token'] = 0  # Is subtitles parameter enabled or not
+        st.session_state['srt_txt'] = ""  # Save the transcript in a subtitles case to display it on the results page
+        st.session_state["summary"] = ""  # Save the summary of the transcript so we can display it on the results page
+        st.session_state["number_of_speakers"] = 0  # Save the number of speakers detected in the conversation (diarization)
+        st.session_state["chosen_mode"] = 0  # Save the mode chosen by the user (Diarization or not, timestamps or not)
+        st.session_state["btn_token_list"] = []  # List of tokens that indicates what options are activated to adapt the display on results page
+        st.session_state["my_HF_token"] = "ACCESS_TOKEN_GOES_HERE"  # User's Token that allows the use of the diarization model
+        st.session_state["disable"] = True  # Default appearance of the button to change your token
     
     # Display Text and CSS
     st.title("Speech to Text App / 음성을 텍스트로 앱 📝")
