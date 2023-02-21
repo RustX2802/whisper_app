@@ -1,6 +1,6 @@
 # Models
 import torch
-from transformers import pipeline, WhisperProcessor, WhisperForConditionalGeneration
+from transformers import pipeline, WhisperProcessor, WhisperForConditionalGeneration, BartForConditionalGeneration
 from pyannote.audio import Pipeline
 
 # Audio Manipulation
@@ -15,6 +15,7 @@ from datetime import timedelta
 import os
 import streamlit as st
 import time
+import pickle
 
 def transcribe_audio_part(filename, stt_model, stt_tokenizer, myaudio, sub_start, sub_end, index):
     device = 0 if torch.cuda.is_available() else "cpu"
