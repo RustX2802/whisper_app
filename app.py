@@ -431,6 +431,22 @@ def display_transcription(transcription, save_result, txt_text, srt_text, sub_st
 
     return save_result, txt_text, srt_text
 
+def convert_file_to_wav(aud_seg, filename):
+    """
+    Convert an mp3/mp4 in a wav format
+    Needs to be modified if you want to convert a format which contains less or more than 3 letters
+
+    :param aud_seg: pydub.AudioSegment
+    :param filename: name of the file
+    :return: name of the converted file
+    """
+    filename = "../data/my_wav_file_" + filename[:-3] + "wav"
+    aud_seg.export(filename, format="wav")
+
+    newaudio = AudioSegment.from_file(filename)
+
+    return newaudio, filename
+
 def display_results():
 
     st.button("Load another file / 다른 파일을 로드하세요", on_click=update_session_state, args=("page_index", 0,))
