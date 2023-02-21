@@ -515,6 +515,26 @@ def merge_speaker_times(diarization_timestamps, max_space, srt_token):
                 index += 1
     return diarization_timestamps
 
+def extending_timestamps(new_diarization_timestamps):
+    """
+    Extend timestamps between each diarization timestamp if possible, so we avoid word cutting
+    :param new_diarization_timestamps: list
+    :return: list with merged times
+    """
+
+    for i in range(1, len(new_diarization_timestamps)):
+        if new_diarization_timestamps[i][0] - new_diarization_timestamps[i - 1][1] <= timedelta(milliseconds=3000) and new_diarization_timestamps[i][0] - new_diarization_timestamps[i - 1][1] >= timedelta(milliseconds=100):
+            middle = (new_diarization_timestamps[i][0] - new_diarization_timestamps[i - 1][1]) / 2
+            new_diarization_timestamps[i][0] -= middle
+            new_diarization_timestamps[i - 1][1] += middle
+
+    # Converting list so we have a milliseconds format
+    for elt in new_diarization_timestamps:
+        elt[0] = elt[0].total_seconds() * 1000
+        elt[1] = elt[1].total_seconds() * 1000
+
+    return new_diarization_timestamps
+
 def display_results():
 
     st.button("Load another file / 다른 파일을 로드하세요", on_click=update_session_state, args=("page_index", 0,))
