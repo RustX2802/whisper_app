@@ -490,6 +490,31 @@ def convert_str_diarlist_to_timedelta(diarization_result):
 
     return diarization_timestamps
 
+def merge_speaker_times(diarization_timestamps, max_space, srt_token):
+    """
+    Merge near times for each detected speaker (Same speaker during 1-2s and 3-4s -> Same speaker during 1-4s)
+    :param diarization_timestamps: diarization list
+    :param max_space: Maximum temporal distance between two silences
+    :param srt_token: Enable/Disable generate srt file (choice fixed by user)
+    :return: list with timedelta intervals and their respective speaker
+    """
+
+    if not srt_token:
+        threshold = pd.Timedelta(seconds=max_space/1000)
+
+        index = 0
+        length = len(diarization_timestamps) - 1
+
+        while index < length:
+            if diarization_timestamps[index + 1][2] == diarization_timestamps[index][2] and \
+                    diarization_timestamps[index + 1][1] - threshold <= diarization_timestamps[index][0]:
+                diarization_timestamps[index][1] = diarization_timestamps[index + 1][1]
+                del diarization_timestamps[index + 1]
+                length -= 1
+            else:
+                index += 1
+    return diarization_timestamps
+
 def display_results():
 
     st.button("Load another file / 다른 파일을 로드하세요", on_click=update_session_state, args=("page_index", 0,))
