@@ -420,6 +420,46 @@ def transcription_non_diarization(filename, myaudio, start, end, srt_token, stt_
 
     return save_result, txt_text, srt_text
 
+def optimize_subtitles(transcription, srt_index, sub_start, sub_end, srt_text):
+    """
+    Optimize the subtitles (avoid a too long reading when many words are said in a short time)
+    :param transcription: transcript generated for an audio chunk
+    :param srt_index: Numeric counter that identifies each sequential subtitle
+    :param sub_start: beginning of the transcript
+    :param sub_end: end of the transcript
+    :param srt_text: generated .srt transcript
+    """
+
+    transcription_length = len(transcription)
+
+    # Length of the transcript should be limited to about 42 characters per line to avoid this problem
+    if transcription_length > 42:
+        # Split the timestamp and its transcript in two parts
+        # Get the middle timestamp
+        diff = (timedelta(milliseconds=sub_end) - timedelta(milliseconds=sub_start)) / 2
+        middle_timestamp = str(timedelta(milliseconds=sub_start) + diff).split(".")[0]
+
+        # Get the closest middle index to a space (we don't divide transcription_length/2 to avoid cutting a word)
+        space_indexes = [pos for pos, char in enumerate(transcription) if char == " "]
+        nearest_index = min(space_indexes, key=lambda x: abs(x - transcription_length / 2))
+
+        # First transcript part
+        first_transcript = transcription[:nearest_index]
+
+        # Second transcript part
+        second_transcript = transcription[nearest_index + 1:]
+
+        # Add both transcript parts to the srt_text
+        srt_text += str(srt_index) + "\n" + str(timedelta(milliseconds=sub_start)).split(".")[0] + " --> " + middle_timestamp + "\n" + first_transcript + "\n\n"
+        srt_index += 1
+        srt_text += str(srt_index) + "\n" + middle_timestamp + " --> " + str(timedelta(milliseconds=sub_end)).split(".")[0] + "\n" + second_transcript + "\n\n"
+        srt_index += 1
+    else:
+        # Add transcript without operations
+        srt_text += str(srt_index) + "\n" + str(timedelta(milliseconds=sub_start)).split(".")[0] + " --> " + str(timedelta(milliseconds=sub_end)).split(".")[0] + "\n" + transcription + "\n\n"
+
+    return srt_text, srt_index
+
 def display_transcription(transcription, save_result, txt_text, srt_text, sub_start, sub_end):
 
     temp_timestamps = str(timedelta(milliseconds=sub_start)).split(".")[0] + " --> " + str(timedelta(milliseconds=sub_end)).split(".")[0] + "\n"        
