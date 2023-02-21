@@ -220,7 +220,7 @@ def config():
         st.session_state["number_of_speakers"] = 0  # Save the number of speakers detected in the conversation (diarization)
         st.session_state["chosen_mode"] = 0  # Save the mode chosen by the user (Diarization or not, timestamps or not)
         st.session_state["btn_token_list"] = []  # List of tokens that indicates what options are activated to adapt the display on results page
-        st.session_state["my_HF_token"] = "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"  # User's Token that allows the use of the diarization model
+        st.session_state["my_HF_token"] = "ACCESS_TOKEN_GOES_HERE"  # User's Token that allows the use of the diarization model
         st.session_state["disable"] = True  # Default appearance of the button to change your token
     
     # Display Text and CSS
@@ -505,16 +505,68 @@ def optimize_subtitles(transcription, srt_index, sub_start, sub_end, srt_text):
 
     return srt_text, srt_index
 
-def display_transcription(transcription, save_result, txt_text, srt_text, sub_start, sub_end):
+def display_transcription(diarization_token, summarize_token, srt_token, timestamps_token, transcription, save_result, txt_text, srt_text, srt_index, sub_start, sub_end, elt=None):
+    """
+    Display results
+    :param diarization_token: Differentiate or not the speakers (choice fixed by user)
+    :param summarize_token: Summarize or not the transcript (choice fixed by user)
+    :param srt_token: Enable/Disable generate srt file (choice fixed by user)
+    :param timestamps_token: Display and save or not the timestamps (choice fixed by user)
+    :param transcription: transcript of the considered audio
+    :param save_result: whole process
+    :param txt_text: generated .txt transcript
+    :param srt_text: generated .srt transcript
+    :param srt_index : numeric counter that identifies each sequential subtitle
+    :param sub_start: start value (s) of the considered audio part to transcribe
+    :param sub_end: end value (s) of the considered audio part to transcribe
+    :param elt: timestamp (diarization case only, otherwise elt = None)
+    """
+    # Display will be different depending on the mode (dia, no dia, dia_ts, nodia_ts)
+    
+    # diarization mode
+    if diarization_token:
+        if summarize_token:
+            update_session_state("summary", transcription + " ", concatenate_token=True)
+        
+        if not timestamps_token:
+            temp_transcription = elt[2] + " : " + transcription
+            st.write(temp_transcription + "\n\n")
 
-    temp_timestamps = str(timedelta(milliseconds=sub_start)).split(".")[0] + " --> " + str(timedelta(milliseconds=sub_end)).split(".")[0] + "\n"        
-    temp_list = [temp_timestamps, transcription, int(sub_start / 1000)]
-    save_result.append(temp_list)
-    st.button(temp_timestamps, on_click=click_timestamp_btn, args=(sub_start,))    
-    st.write(transcription + "\n\n")
-    txt_text += transcription + " "  # So x seconds sentences are separated
+            save_result.append([int(elt[2][-1]), elt[2], " : " + transcription])
+            
+        elif timestamps_token:
+            temp_timestamps = str(timedelta(milliseconds=sub_start)).split(".")[0] + " --> " + \
+                              str(timedelta(milliseconds=sub_end)).split(".")[0] + "\n"
+            temp_transcription = elt[2] + " : " + transcription
+            temp_list = [temp_timestamps, int(elt[2][-1]), elt[2], " : " + transcription, int(sub_start / 1000)]
+            save_result.append(temp_list)
+            st.button(temp_timestamps, on_click=click_timestamp_btn, args=(sub_start,))
+            st.write(temp_transcription + "\n\n")
+            
+            if srt_token:
+                srt_text, srt_index = optimize_subtitles(transcription, srt_index, sub_start, sub_end, srt_text)
 
-    return save_result, txt_text, srt_text
+
+    # Non diarization case
+    else:
+        if not timestamps_token:
+            save_result.append([transcription])
+            st.write(transcription + "\n\n")
+            
+        else:
+            temp_timestamps = str(timedelta(milliseconds=sub_start)).split(".")[0] + " --> " + \
+                              str(timedelta(milliseconds=sub_end)).split(".")[0] + "\n"
+            temp_list = [temp_timestamps, transcription, int(sub_start / 1000)]
+            save_result.append(temp_list)
+            st.button(temp_timestamps, on_click=click_timestamp_btn, args=(sub_start,))
+            st.write(transcription + "\n\n")
+            
+            if srt_token:
+                srt_text, srt_index = optimize_subtitles(transcription, srt_index, sub_start, sub_end, srt_text)
+
+        txt_text += transcription + " "  # So x seconds sentences are separated
+
+    return save_result, txt_text, srt_text, srt_index
 
 def convert_file_to_wav(aud_seg, filename):
     """
