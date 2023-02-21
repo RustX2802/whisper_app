@@ -398,6 +398,51 @@ def init_transcription(start, end):
     save_result = []
     return txt_text, srt_text, save_result
 
+def transcription_diarization(filename, diarization_timestamps, stt_model, stt_tokenizer, diarization_token, srt_token,
+                              summarize_token, timestamps_token, myaudio, start, save_result, txt_text, srt_text):
+    """
+    Performs transcription with the diarization mode
+    :param filename: name of the audio file
+    :param diarization_timestamps: timestamps of each audio part (ex 10 to 50 secs)
+    :param stt_model: Speech to text model
+    :param stt_tokenizer: Speech to text model's tokenizer
+    :param diarization_token: Differentiate or not the speakers (choice fixed by user)
+    :param srt_token: Enable/Disable generate srt file (choice fixed by user)
+    :param summarize_token: Summarize or not the transcript (choice fixed by user)
+    :param timestamps_token: Display and save or not the timestamps (choice fixed by user)
+    :param myaudio: AudioSegment file
+    :param start: int value (s) given by st.slider() (fixed by user)
+    :param save_result: whole process
+    :param txt_text: generated .txt transcript
+    :param srt_text: generated .srt transcript
+    :return: results of transcribing action
+    """
+    # Numeric counter that identifies each sequential subtitle
+    srt_index = 1
+
+    # Handle a rare case : Only the case if only one "list" in the list (it makes a classic list) not a list of list
+    if not isinstance(diarization_timestamps[0], list):
+        diarization_timestamps = [diarization_timestamps]
+
+    # Transcribe each audio chunk (from timestamp to timestamp) and display transcript
+    for index, elt in enumerate(diarization_timestamps):
+        sub_start = elt[0]
+        sub_end = elt[1]
+
+        transcription = transcribe_audio_part(filename, stt_model, stt_tokenizer, myaudio, sub_start, sub_end,
+                                              index)
+
+        # Initial audio has been split with start & end values
+        # It begins to 0s, but the timestamps need to be adjust with +start*1000 values to adapt the gap
+        if transcription != "":
+            save_result, txt_text, srt_text, srt_index = display_transcription(diarization_token, summarize_token,
+                                                                    srt_token, timestamps_token,
+                                                                    transcription, save_result, txt_text,
+                                                                    srt_text,
+                                                                    srt_index, sub_start + start * 1000,
+                                                                    sub_end + start * 1000, elt)
+    return save_result, txt_text, srt_text
+
 def transcription_non_diarization(filename, myaudio, start, end, srt_token, stt_model, stt_tokenizer, min_space, max_space, save_result, txt_text, srt_text):
     
     # get silences
