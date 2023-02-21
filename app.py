@@ -179,6 +179,26 @@ def clean_directory(path):
     for file in os.listdir(path):
         os.remove(os.path.join(path, file))
 
+def correct_values(start, end, audio_length):
+    """
+    Start or/and end value(s) can be in conflict, so we check these values
+    :param start: int value (s) given by st.slider() (fixed by user)
+    :param end: int value (s) given by st.slider() (fixed by user)
+    :param audio_length: audio duration (s)
+    :return: approved values
+    """
+    # Start & end Values need to be checked
+
+    if start >= audio_length or start >= end:
+        start = 0
+        st.write("Start value has been set to 0s because of conflicts with other values / 다른 값과 충돌하여 시작 값을 0으로 설정했습니다")
+
+    if end > audio_length or end == 0:
+        end = audio_length
+        st.write("End value has been set to maximum value because of conflicts with other values / 다른 값과 충돌하여 끝 값이 최대 값으로 설정되었습니다")
+
+    return start, end
+
 def config():
 
     st.set_page_config(page_title="Speech to Text / 음성을 텍스트로", page_icon="📝")
