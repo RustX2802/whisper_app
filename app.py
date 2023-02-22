@@ -220,7 +220,8 @@ def config():
         st.session_state["number_of_speakers"] = 0  # Save the number of speakers detected in the conversation (diarization)
         st.session_state["chosen_mode"] = 0  # Save the mode chosen by the user (Diarization or not, timestamps or not)
         st.session_state["btn_token_list"] = []  # List of tokens that indicates what options are activated to adapt the display on results page
-        st.session_state["my_HF_token"] = "ACCESS_TOKEN_GOES_HERE"  # User's Token that allows the use of the diarization model
+        #st.session_state["my_HF_token"] = "ACCESS_TOKEN_GOES_HERE"  # User's Token that allows the use of the diarization model
+        st.session_state["my_HF_token"] = "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"  # User's Token that allows the use of the diarization model
         st.session_state["disable"] = True  # Default appearance of the button to change your token
     
     # Display Text and CSS
@@ -862,6 +863,60 @@ def create_txt_text_from_process():
             txt_text += elt[2] + elt[3] + '\n\n'
 
     return txt_text
+
+def rename_speakers_window():
+    """
+    Load a new page which allows the user to rename the different speakers from the diarization process
+    For example he can switch from "Speaker1 : "I wouldn't say that"" to "Mat : "I wouldn't say that""
+    """
+
+    st.subheader("Here you can rename the speakers as you want / 여기에서 원하는 대로 스피커 이름을 바꿀 수 있습니다")
+    number_of_speakers = st.session_state["number_of_speakers"]
+
+    if number_of_speakers > 0:
+        # Handle displayed text according to the number_of_speakers
+        if number_of_speakers == 1:
+            st.write(str(number_of_speakers) + " speaker has been detected in your audio")
+        else:
+            st.write(str(number_of_speakers) + " speakers have been detected in your audio")
+
+        # Saving the Speaker Name and its ID in a list, example : [1, 'Speaker1']
+        list_of_speakers = []
+        for elt in st.session_state["process"]:
+            if st.session_state["chosen_mode"] == "DIA_TS":
+                if [elt[1], elt[2]] not in list_of_speakers:
+                    list_of_speakers.append([elt[1], elt[2]])
+            elif st.session_state["chosen_mode"] == "DIA":
+                if [elt[0], elt[1]] not in list_of_speakers:
+                    list_of_speakers.append([elt[0], elt[1]])
+
+        # Sorting (by ID)
+        list_of_speakers.sort()  # [[1, 'Speaker1'], [0, 'Speaker0']] => [[0, 'Speaker0'], [1, 'Speaker1']]
+
+        # Display saved names so the user can modify them
+        initial_names = ""
+        for elt in list_of_speakers:
+            initial_names += elt[1] + "\n"
+
+        names_input = st.text_area("Just replace the names without changing the format (one per line) / 형식을 변경하지 않고 이름만 바꾸십시오(한 줄에 하나씩)",
+                                   value=initial_names)
+
+        # Display Options (Cancel / Save)
+        col1, col2 = st.columns(2)
+        with col1:
+            # Cancel changes by clicking a button - callback function to return to the results page
+            st.button("Cancel / 취소", on_click=update_session_state, args=("page_index", 1,))
+        with col2:
+            # Confirm changes by clicking a button - callback function to apply changes and return to the results page
+            st.button("Save changes / 변경 사항을 저장", on_click=click_confirm_rename_btn, args=(names_input, number_of_speakers, ))
+
+    # Don't have anyone to rename
+    else:
+        st.error("0 speakers have been detected. Seems there is an issue with diarization / 0명의 스피커가 감지되었습니다. 분할에 문제가 있는 것 같습니다")
+        with st.spinner("Redirecting to transcription page / 전사 페이지로 리디렉션 중"):
+            time.sleep(4)
+            # return to the results page
+            update_session_state("page_index", 1)
 
 if __name__ == '__main__':
     config()
