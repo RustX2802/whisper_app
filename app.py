@@ -918,6 +918,30 @@ def rename_speakers_window():
             # return to the results page
             update_session_state("page_index", 1)
 
+def click_confirm_rename_btn(names_input, number_of_speakers):
+    """
+    If the users decides to rename speakers and confirms his choices, we apply the modifications to our transcript
+    Then we return to the results page of the app
+    :param names_input: string
+    :param number_of_speakers: Number of detected speakers in the audio file
+    """
+
+    try:
+        names_input = names_input.split("\n")[:number_of_speakers]
+
+        for elt in st.session_state["process"]:
+            elt[2] = names_input[elt[1]]
+
+        txt_text = create_txt_text_from_process()
+        update_session_state("txt_transcript", txt_text)
+        update_session_state("page_index", 1)
+
+    except TypeError:  # list indices must be integers or slices, not str (happened to me one time when writing nonsense names)
+        st.error("Please respect the 1 name per line format / 한 줄에 1개의 이름 형식을 준수하십시오")
+        with st.spinner("We are relaunching the page / 페이지를 다시 시작하고 있습니다"):
+            time.sleep(3)
+            update_session_state("page_index", 1)
+
 if __name__ == '__main__':
     config()
 
