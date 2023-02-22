@@ -689,20 +689,60 @@ def display_results():
 
     # Display results of transcription by steps
     if st.session_state["process"] != []:
-        for elt in (st.session_state['process']):
+        if st.session_state["chosen_mode"] == "NODIA":  # Non diarization, non timestamps case
+            for elt in (st.session_state['process']):
+                st.write(elt[0])
 
-            # Timestamp
-            st.button(elt[0], on_click=update_session_state, args=("start_time", elt[2],))
+        elif st.session_state["chosen_mode"] == "DIA":  # Diarization without timestamps case
+            for elt in (st.session_state['process']):
+                st.write(elt[1] + elt[2])
 
-            # Transcript for this timestamp
-            st.write(elt[1])
+        elif st.session_state["chosen_mode"] == "NODIA_TS":  # Non diarization with timestamps case
+            for elt in (st.session_state['process']):
+                st.button(elt[0], on_click=update_session_state, args=("start_time", elt[2],))
+                st.write(elt[1])
+
+        elif st.session_state["chosen_mode"] == "DIA_TS":  # Diarization with timestamps case
+            for elt in (st.session_state['process']):
+                st.button(elt[0], on_click=update_session_state, args=("start_time", elt[4],))
+                st.write(elt[2] + elt[3])
 
     # Display final text
     st.subheader("Final text is / 최종 텍스트는")
     st.write(st.session_state["txt_transcript"])
     
-    # Download your transcription.txt
-    st.download_button("Download as TXT / TXT로 다운로드", st.session_state["txt_transcript"], file_name="my_transcription.txt")
+    # Display Summary
+    if st.session_state["summary"] != "":
+        with st.expander("Summary / 요약"):
+            st.write(st.session_state["summary"])
+
+    # Display the buttons in a list to avoid having empty columns
+    col1, col2, col3, col4 = st.columns(4)
+    col_list = [col1, col2, col3, col4]
+    col_index = 0
+
+    for elt in st.session_state["btn_token_list"]:
+        if elt[0]:
+            mycol = col_list[col_index]
+            if elt[1] == "useless_txt_token":
+                # Download your transcription.txt
+                with mycol:
+                    st.download_button("Download as TXT / TXT로 다운로드", st.session_state["txt_transcript"], file_name="my_transcription.txt")
+
+            elif elt[1] == "srt_token":
+                # Download your transcription.srt
+                with mycol:
+                    st.download_button("Download as SRT / SRT로 다운로드", st.session_state["srt_txt"], file_name="my_transcription.srt")
+
+            elif elt[1] == "dia_token":
+                with mycol:
+                    # Rename the speakers detected in your audio
+                    st.button("Rename Speakers / 스피커 이름 바꾸기", on_click=update_session_state, args=("page_index", 2,))
+
+            elif elt[1] == "summarize_token":
+                with mycol:
+                    st.download_button("Download Summary / 요약 다운로드", st.session_state["summary"], file_name="my_summary.txt")
+            col_index += 1
 
 def click_timestamp_btn(sub_start):
     """
