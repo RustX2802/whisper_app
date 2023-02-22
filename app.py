@@ -959,16 +959,65 @@ def transcription(stt_tokenizer, stt_model, summarizer, dia_pipeline, filename, 
                                 # Need to split the text by 512 text blocks size since the model has a limited input
                                 if diarization_token:
                                     # In diarization mode, the text to summarize is contained in the "summary" session state variable
-                                    my_split_text_list = 
+                                    my_split_text_list = split_text(st.session_state["summary"], 512)
+                                else:
+                                    # In non-diarization mode, it is contained in the txt_text
+                                    my_split_text_list = split_text(txt_text, 512)
 
-                    st.write(txt_text)
-                    st.download_button("Download as TXT / TXT로 다운로드", txt_text, file_name="my_transcription.txt", on_click=update_session_state, args=("page_index", 1,))
+                                summary = ""
+                                # Summarize each text block
+                                for my_split_text in my_split_text_list:
+                                    summary += summarizer(my_split_text)[0]['summary_text']
+
+                                # Display summary and save it
+                                st.write(summary)
+                                update_session_state("summary", summary)
+
+                    # Display buttons to interact with results
+                    # We have 4 possible buttons depending on the user's choices. But we can't set 4 columns
+                    # for 4 buttons. Indeed, if the user displays only 3 buttons, it is possible that one of
+                    # the column 1, 2 or 3 is empty which would be ugly. We want the activated options to be in
+                    # the first column, so that the empty columns are not noticed. To do that, let's create a btn_token_list
+                    btn_token_list = [[diarization_token, "dia_token"], [True, "useless_txt_token"], [srt_token, "srt_token"], [summarize_token, "summarize_token"]]
+
+                    # Save this list to be able to reach it on the other pages of the app
+                    update_session_state("btn_token_list", btn_token_list)
+
+                    # Create 4 columns
+                    col1, col2, col3, col4 = st.columns(4)
+
+                    # Create a column list
+                    col_list = [col1, col2, col3, col4]
+
+                    # Check value of each token, if True, we put the respective button of the token in a column
+                    col_index = 0
+                    for elt in btn_token_list:
+                        if elt[0]:
+                            mycol = col_list[col_index]
+                            if elt[1] == "useless_txt_token":
+                                # Download your transcript.txt
+                                with mycol:
+                                    st.download_button("Download as TXT / TXT로 다운로드", txt_text, file_name="my_transcription.txt", on_click=update_session_state, args=("page_index", 1,))
+                            elif elt[1] == "srt_token":
+                                # Download your transcript.srt
+                                with mycol:
+                                    update_session_state("srt_token", srt_token)
+                                    st.download_button("Download as SRT / SRT로 다운로드", srt_text, file_name="my_transcription.srt", on_click=update_session_state, args=("page_index", 1,))
+                            elif elt[1] == "dia_token":
+                                with mycol:
+                                    # Rename the speakers detected in your audio
+                                    st.button("Rename Speakers / 스피커 이름 바꾸기", on_click=update_session_state, args=("page_index", 2,))
+                            elif elt[1] == "summarize_token":
+                                with mycol:
+                                    # Download the summary of your transcript.txt
+                                    st.download_button("Download Summary / 요약 다운로드", st.session_state["summary"], file_name="my_summary.txt", on_click=update_session_state, args=("page_index", 1,))
+                            col_index += 1
 
                 else:
                     st.write("Transcription impossible, a problem occurred with your audio or your parameters, we apologize :( / 녹음이 불가능합니다. 오디오 또는 매개변수에 문제가 발생했습니다. 죄송합니다 :(")
 
     else:
-        st.error("Seems your audio is 0 s long, please change your file / 오디오 길이가 0초인 것 같습니다. 파일을 변경하세요.")
+        st.error("Seems your audio is 0 s long, please change your file / 오디오 길이가 0초인 것 같습니다. 파일을 변경하세요")
         time.sleep(3)
         st.stop()
 
