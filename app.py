@@ -33,8 +33,8 @@ def transcribe_audio_part(filename, stt_model, stt_tokenizer, myaudio, sub_start
             )
 
             # Decode & lower our string (model's output is only uppercase)
-            transcript = pipe(path)["text"]
-            return transcript
+            transcription = pipe(path)["text"]
+            return transcription
 
     except audioread.NoBackendError:
         # Means we have a chunk with a [value1 : value2] case with value1>value2
@@ -803,6 +803,25 @@ def transcription(stt_tokenizer, stt_model, filename, uploaded_file=None):
         st.error("Seems your audio is 0 s long, please change your file / 오디오 길이가 0초인 것 같습니다. 파일을 변경하세요.")
         time.sleep(3)
         st.stop()
+
+def create_txt_text_from_process():
+    """
+    If we are in a diarization case (differentiate speakers), we create txt_text from st.session.state['process']
+    There is a lot of information in the process variable, but we only extract the identity of the speaker and
+    the sentence spoken, as in a non-diarization case.
+    :return: Final transcript (without timestamps)
+    """
+    txt_text = ""
+    # The information to be extracted is different according to the chosen mode
+    if st.session_state["chosen_mode"] == "DIA":
+        for elt in st.session_state["process"]:
+            txt_text += elt[1] + elt[2] + '\n\n'
+
+    elif st.session_state["chosen_mode"] == "DIA_TS":
+        for elt in st.session_state["process"]:
+            txt_text += elt[2] + elt[3] + '\n\n'
+
+    return txt_text
 
 if __name__ == '__main__':
     config()
