@@ -379,7 +379,7 @@ def extract_audio_from_yt_video(url):
 
     return filename
 
-def transcript_from_url(stt_tokenizer, stt_model):
+def transcript_from_url(stt_tokenizer, stt_model, summarizer, dia_pipeline):
     
     url = st.text_input("Enter the YouTube video URL then press Enter to confirm! / YouTube 동영상 URL을 입력한 다음 Enter 키를 눌러 확인하세요!")
     
@@ -387,7 +387,7 @@ def transcript_from_url(stt_tokenizer, stt_model):
     if "youtu" in url:
         filename = extract_audio_from_yt_video(url)
         if filename is not None:
-            transcription(stt_tokenizer, stt_model, filename)
+            transcription(stt_tokenizer, stt_model, summarizer, dia_pipeline, filename)
         else:
             st.error("We were unable to extract the audio. Please verify your link, retry or choose another video / 오디오를 추출할 수 없습니다. 링크를 확인하고 다시 시도하거나 다른 동영상을 선택하세요.")
 
