@@ -466,6 +466,25 @@ def transcription_non_diarization(filename, myaudio, start, end, srt_token, stt_
 
     return save_result, txt_text, srt_text
 
+def silence_mode_init(srt_token):
+    """
+    Fix min_space and max_space values
+    If the user wants an srt file, we need to have tiny timestamps
+    :param srt_token: Enable/Disable generate srt file option (choice fixed by user)
+    :return: min_space and max_space values
+    """
+
+    if srt_token:
+        # We need short intervals if we want a short text
+        min_space = 500  # 0.5 sec
+        max_space = 4000  # 4 secs
+
+    else:
+
+        min_space = 10000  # 10 secs
+        max_space = 30000  # 30secs
+    return min_space, max_space
+
 def optimize_subtitles(transcription, srt_index, sub_start, sub_end, srt_text):
     """
     Optimize the subtitles (avoid a too long reading when many words are said in a short time)
