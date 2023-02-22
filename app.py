@@ -444,7 +444,9 @@ def transcription_diarization(filename, diarization_timestamps, stt_model, stt_t
                                                                     sub_end + start * 1000, elt)
     return save_result, txt_text, srt_text
 
-def transcription_non_diarization(filename, myaudio, start, end, srt_token, stt_model, stt_tokenizer, min_space, max_space, save_result, txt_text, srt_text):
+def transcription_non_diarization(filename, myaudio, start, end, diarization_token, timestamps_token, srt_token, summarize_token, stt_model, stt_tokenizer, min_space, max_space, save_result, txt_text, srt_text):
+    # Numeric counter identifying each sequential subtitle
+    srt_index = 1
     
     # get silences
     silence_list = detect_silences(myaudio)
@@ -462,7 +464,7 @@ def transcription_non_diarization(filename, myaudio, start, end, srt_token, stt_
         transcription = transcribe_audio_part(filename, stt_model, stt_tokenizer, myaudio, sub_start, sub_end, i)
         
         if transcription != "":
-            save_result, txt_text, srt_text = display_transcription(transcription, save_result, txt_text, srt_text, sub_start, sub_end)
+            save_result, txt_text, srt_text, srt_index = display_transcription(diarization_token, summarize_token, srt_token, timestamps_token, transcription, save_result, txt_text, srt_text, srt_index, sub_start + start * 1000, sub_end + start * 1000)
 
     return save_result, txt_text, srt_text
 
