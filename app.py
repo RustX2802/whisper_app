@@ -199,6 +199,46 @@ def correct_values(start, end, audio_length):
 
     return start, end
 
+def split_text(my_text, max_size):
+    """
+    Split a text
+    Maximum sequence length for this model is max_size.
+    If the transcript is longer, it needs to be split by the nearest possible value to max_size.
+    To avoid cutting words, we will cut on "." characters, and " " if there is not "."
+
+    :return: split text
+    """
+
+    cut2 = max_size
+
+    # First, we get indexes of "."
+    my_split_text_list = []
+    nearest_index = 0
+    length = len(my_text)
+    # We split the transcript in text blocks of size <= max_size.
+    if cut2 == length:
+        my_split_text_list.append(my_text)
+    else:
+        while cut2 <= length:
+            cut1 = nearest_index
+            cut2 = nearest_index + max_size
+            # Find the best index to split
+
+            dots_indexes = [index for index, char in enumerate(my_text[cut1:cut2]) if
+                            char == "."]
+            if dots_indexes != []:
+                nearest_index = max(dots_indexes) + 1 + cut1
+            else:
+                spaces_indexes = [index for index, char in enumerate(my_text[cut1:cut2]) if
+                                  char == " "]
+                if spaces_indexes != []:
+                    nearest_index = max(spaces_indexes) + 1 + cut1
+                else:
+                    nearest_index = cut2 + cut1
+            my_split_text_list.append(my_text[cut1: nearest_index])
+
+    return my_split_text_list
+
 def config():
 
     st.set_page_config(page_title="Speech to Text / 음성을 텍스트로", page_icon="📝")
@@ -799,7 +839,7 @@ def diarization_treatment(filename, dia_pipeline, max_space, srt_token):
 
     return diarization_timestamps, number_of_speakers
 
-def transcription(stt_tokenizer, stt_model, filename, uploaded_file=None):
+def transcription(stt_tokenizer, stt_model, summarizer, dia_pipeline, filename, uploaded_file=None):
 
     # If the audio comes from the YouTube extracting mode, the audio is downloaded so the uploaded_file is
     # the same as the filename. We need to change the uploaded_file which is currently set to None
@@ -810,41 +850,95 @@ def transcription(stt_tokenizer, stt_model, filename, uploaded_file=None):
     myaudio = AudioSegment.from_file(uploaded_file)
     audio_length = myaudio.duration_seconds
     
+    # Save Audio (so we can display it on another page ("DISPLAY RESULTS"), otherwise it is lost)
+    update_session_state("audio_file", uploaded_file)
+    
     # Display audio file
     st.audio(uploaded_file)
-
-    # Save Audio so it is not lost when we interact with a button (so we can display it on the results page)
-    update_session_state("audio_file", uploaded_file)
 
     # Is transcription possible
     if audio_length > 0:
         
-        # display a button so the user can launch the transcribe process
-        transcript_btn = st.button("Transcribe / 전사하세요")
+        # We display options and user shares his wishes
+        transcript_btn, start, end, diarization_token, timestamps_token, srt_token, summarize_token, choose_better_model = load_options(int(audio_length), dia_pipeline)
 
-        # if button is clicked
+        # if end value hasn't been changed, we fix it to the max value so we don't cut some ms of the audio because end value is returned by an st.slider which returns end value as an int (ex: return 12 sec instead of end=12.9s)
+        if end == int(audio_length):
+            end = audio_length
+
+        # Switching model for the better one
+        if choose_better_model:
+            with st.spinner("We are loading the better model. Please wait... / 더 나은 모델을 로드하고 있습니다. 기다리세요..."):
+                try:
+                    stt_tokenizer = pickle.load(open("models/STT_processor2_whisper-large.sav", 'rb'))
+                except FileNotFoundError:
+                    stt_tokenizer = WhisperProcessor.from_pretrained("openai/whisper-large")
+                try:
+                    stt_model = pickle.load(open("models/STT_model2_whisper-large.sav", 'rb'))
+                except FileNotFoundError:
+                    stt_model = WhisperForConditionalGeneration.from_pretrained("openai/whisper-large")
+
+        # Validate options and launch the transcription process thanks to the form's button
         if transcript_btn:
+            # Check if start & end values are correct
+            start, end = correct_values(start, end, audio_length)
+
+            # If start a/o end value(s) has/have changed, we trim/cut the audio according to the new start/end values.
+            if start != 0 or end != audio_length:
+                myaudio = myaudio[start * 1000:end * 1000]   # Works in milliseconds (*1000)
 
             # Transcribe process is running
             with st.spinner("We are transcribing your audio. Please wait / 귀하의 오디오를 전사하고 있습니다. 기다리세요"):
 
                 # Init variables
-                start = 0
-                end = audio_length
                 txt_text, srt_text, save_result = init_transcription(start, int(end))
-                srt_token = False
-                min_space = 10000
-                max_space = 30000
+                min_space, max_space = silence_mode_init(srt_token)
 
+                # Differentiate speakers mode
+                if diarization_token:
+                    # Save mode chosen by user, to display expected results
+                    if not timestamps_token:
+                        update_session_state("chosen mode", "DIA")
+                    elif timestamps_token:
+                        update_session_state("chosen mode", "DIA_TS")
+                    
+                    # Convert mp3/mp4 to wav (Differentiate speakers mode only accepts wav files)
+                    if filename.endswith((".mp3", ".mp4")):
+                        myaudio, filename = convert_file_to_wav(myaudio, filename)
+                    else:
+                        filename = "../data/" + filename
+                        myaudio.export(filename, format="wav")
+
+                    # Differentiate speakers process
+                    diarization_timestamps, number_of_speakers = diarization_treatment(filename, dia_pipeline, max_space, srt_token)
+
+                    # Saving the number of detected speakers
+                    update_session_state("number_of_speakers", number_of_speakers)
+
+                    # Transcribe process with Diarization Mode
+                    save_result, txt_text, srt_text = transcription_diarization(filename, diarization_timestamps, stt_model, stt_tokenizer, diarization_token, srt_token, summarize_token, timestamps_token, myaudio, start, save_result, txt_text, srt_text)
 
                 # Non Diarization Mode
-                filename = "../data/" + filename
-                
-                # Transcribe process with Non Diarization Mode
-                save_result, txt_text, srt_text = transcription_non_diarization(filename, myaudio, start, end, srt_token, stt_model, stt_tokenizer, min_space, max_space, save_result, txt_text, srt_text)
+                else:
+                    # Save mode chosen by user, to display expected results
+                    if not timestamps_token:
+                        update_session_state("chosen mode", "NODIA")
+                    if timestamps_token:
+                        update_session_state("chosen mode", "NODIA_TS")
+                    
+                    filename = "../data/" + filename
+                    # Transcribe process with non Diarization Mode
+                    save_result, txt_text, srt_text = transcription_non_diarization(filename, myaudio, start, end, diarization_token, timestamps_token, srt_token, summarize_token, stt_model, stt_tokenizer, min_space, max_space, save_result, txt_text, srt_text)
 
                 # Save results
                 update_session_state("process", save_result)
+                update_session_state("srt_txt", srt_text)
+
+                # Get final text
+                # Diarization Mode
+                if diarization_token:
+                    # Create txt text from the process
+                    txt_text = create_txt_text_from_process()
 
                 # Delete files
                 clean_directory("../data")  # clean folder that contains generated files
@@ -853,8 +947,20 @@ def transcription(stt_tokenizer, stt_model, filename, uploaded_file=None):
                 if txt_text != "":
                     st.subheader("Final text is / 최종 텍스트는")
 
-                    # Save txt_text
+                    # Save txt_text and display it
                     update_session_state("txt_transcript", txt_text)
+                    st.markdown(txt_text, unsafe_allow_html=True)
+
+                    # Summarize the transcript
+                    if summarize_token:
+                        with st.spinner("We are summarizing your audio / 오디오를 요약하고 있습니다"):
+                            # Display summary in a st.expander widget to don't write too much text on the page
+                            with st.expander("Summary / 요약"):
+                                # Need to split the text by 512 text blocks size since the model has a limited input
+                                if diarization_token:
+                                    # In diarization mode, the text to summarize is contained in the "summary" session state variable
+                                    my_split_text_list = 
+
                     st.write(txt_text)
                     st.download_button("Download as TXT / TXT로 다운로드", txt_text, file_name="my_transcription.txt", on_click=update_session_state, args=("page_index", 1,))
 
