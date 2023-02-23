@@ -536,8 +536,8 @@ def silence_mode_init(srt_token):
 
     if srt_token:
         # We need short intervals if we want a short text
-        min_space = 500  # 0.5 sec
-        max_space = 4000  # 4 secs
+        min_space = 1000  # 1 sec
+        max_space = 8000  # 8 secs
 
     else:
 
