@@ -249,6 +249,7 @@ def config():
 
     # Initialize session state variables
     if 'page_index' not in st.session_state:
+        st.session_state['page_index'] = -1
         st.session_state['audio_file'] = None
         st.session_state["process"] = []
         st.session_state['txt_transcript'] = ""
