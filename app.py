@@ -31,7 +31,6 @@ def config():
         st.session_state['audio_file'] = None
         st.session_state["process"] = []
         st.session_state['txt_transcript'] = ""
-        st.session_state["page_index"] = 0
         st.session_state["start_time"] = 0
         st.session_state['srt_token'] = 0  # Is subtitles parameter enabled or not
         st.session_state['srt_txt'] = ""  # Save the transcript in a subtitles case to display it on the results page
