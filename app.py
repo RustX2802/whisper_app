@@ -165,7 +165,7 @@ def transcript_from_url(stt_tokenizer, stt_model, summarizer, dia_pipeline):
 
 def transcript_from_file(stt_tokenizer, stt_model, summarizer, dia_pipeline):
 
-    uploaded_file = st.file_uploader("Upload your file! It can be a .mp3, .mp4 or .wav / 파일을 업로드하세요! .mp3, .mp4 또는 .wav일 수 있습니다.", type=["mp3", "mp4", "wav"], on_change=update_session_state, args=('page_index', 0,))
+    uploaded_file = st.file_uploader("Upload your file! It can be a .mp3, .mp4 or .wav / 파일을 업로드하세요! .mp3, .mp4 또는 .wav일 수 있습니다.", type=["mp3", "mp4", "wav"], on_change=update_session_state, args=("page_index", 0,))
 
     if uploaded_file is not None:
         # get name and launch transcription function
@@ -336,20 +336,20 @@ def transcription(stt_tokenizer, stt_model, summarizer, dia_pipeline, filename, 
                             if elt[1] == "useless_txt_token":
                                 # Download your transcript.txt
                                 with mycol:
-                                    st.download_button("Download as TXT / TXT로 다운로드", txt_text, file_name="my_transcription.txt", on_click=update_session_state, args=('page_index', 1,))
+                                    st.download_button("Download as TXT / TXT로 다운로드", txt_text, file_name="my_transcription.txt", on_click=update_session_state, args=("page_index", 1,))
                             elif elt[1] == "srt_token":
                                 # Download your transcript.srt
                                 with mycol:
                                     update_session_state("srt_token", srt_token)
-                                    st.download_button("Download as SRT / SRT로 다운로드", srt_text, file_name="my_transcription.srt", on_click=update_session_state, args=('page_index', 1,))
+                                    st.download_button("Download as SRT / SRT로 다운로드", srt_text, file_name="my_transcription.srt", on_click=update_session_state, args=("page_index", 1,))
                             elif elt[1] == "dia_token":
                                 with mycol:
                                     # Rename the speakers detected in your audio
-                                    st.button("Rename Speakers / 스피커 이름 바꾸기", on_click=update_session_state, args=('page_index', 2,))
+                                    st.button("Rename Speakers / 스피커 이름 바꾸기", on_click=update_session_state, args=("page_index", 2,))
                             elif elt[1] == "summarize_token":
                                 with mycol:
                                     # Download the summary of your transcript.txt
-                                    st.download_button("Download Summary / 요약 다운로드", st.session_state["summary"], file_name="my_summary.txt", on_click=update_session_state, args=('page_index', 1,))
+                                    st.download_button("Download Summary / 요약 다운로드", st.session_state["summary"], file_name="my_summary.txt", on_click=update_session_state, args=("page_index", 1,))
                             col_index += 1
 
                 else:
@@ -420,7 +420,7 @@ def rename_speakers_window():
         col1, col2 = st.columns(2)
         with col1:
             # Cancel changes by clicking a button - callback function to return to the results page
-            st.button("Cancel / 취소", on_click=update_session_state, args=('page_index', 1,))
+            st.button("Cancel / 취소", on_click=update_session_state, args=("page_index", 1,))
         with col2:
             # Confirm changes by clicking a button - callback function to apply changes and return to the results page
             st.button("Save changes / 변경 사항을 저장", on_click=click_confirm_rename_btn, args=(names_input, number_of_speakers,))
@@ -431,7 +431,7 @@ def rename_speakers_window():
         with st.spinner("Redirecting to transcription page / 전사 페이지로 리디렉션 중"):
             time.sleep(4)
             # return to the results page
-            update_session_state('page_index', 1)
+            update_session_state("page_index", 1)
 
 def click_confirm_rename_btn(names_input, number_of_speakers):
     """
@@ -449,13 +449,13 @@ def click_confirm_rename_btn(names_input, number_of_speakers):
 
         txt_text = create_txt_text_from_process()
         update_session_state("txt_transcript", txt_text)
-        update_session_state('page_index', 1)
+        update_session_state("page_index", 1)
 
     except TypeError:  # list indices must be integers or slices, not str (happened to me one time when writing nonsense names)
         st.error("Please respect the 1 name per line format / 한 줄에 1개의 이름 형식을 준수하십시오")
         with st.spinner("We are relaunching the page / 페이지를 다시 시작하고 있습니다"):
             time.sleep(3)
-            update_session_state('page_index', 1)
+            update_session_state("page_index", 1)
 
 def transcription_diarization(filename, diarization_timestamps, stt_model, stt_tokenizer, diarization_token, srt_token,
                               summarize_token, timestamps_token, myaudio, start, save_result, txt_text, srt_text):
@@ -856,7 +856,7 @@ def confirm_token_change(hf_token, page_index):
     :param page_index: number that represents the home page index
     """
     update_session_state("my_HF_token", hf_token)
-    update_session_state('page_index', page_index)
+    update_session_state("page_index", page_index)
 
 def convert_str_diarlist_to_timedelta(diarization_result):
     """
@@ -1001,7 +1001,7 @@ def update_session_state(var, data, concatenate_token=False):
 
 def display_results():
 
-    st.button("Load another file / 다른 파일을 로드하세요", on_click=update_session_state, args=('page_index', 0,))
+    st.button("Load another file / 다른 파일을 로드하세요", on_click=update_session_state, args=("page_index", 0,))
     st.audio(st.session_state['audio_file'], start_time=st.session_state["start_time"])
 
     # Display results of transcription by steps
@@ -1054,7 +1054,7 @@ def display_results():
             elif elt[1] == "dia_token":
                 with mycol:
                     # Rename the speakers detected in your audio
-                    st.button("Rename Speakers / 스피커 이름 바꾸기", on_click=update_session_state, args=('page_index', 2,))
+                    st.button("Rename Speakers / 스피커 이름 바꾸기", on_click=update_session_state, args=("page_index", 2,))
 
             elif elt[1] == "summarize_token":
                 with mycol:
@@ -1067,7 +1067,7 @@ def click_timestamp_btn(sub_start):
     It allows the user to listen to the considered part of the audio
     :param sub_start: Beginning of the considered transcript (ms)
     """
-    update_session_state('page_index', 1)
+    update_session_state("page_index", 1)
     update_session_state("start_time", int(sub_start / 1000)) # division to convert ms to s
 
 def diarization_treatment(filename, dia_pipeline, max_space, srt_token):
@@ -1135,7 +1135,7 @@ if __name__ == '__main__':
 
         # Continue without a token (there will be no diarization option)
         with col2:
-            dont_mind_btn = st.button("Continue without this option / 이 옵션 없이 계속하십시오", on_click=update_session_state, args=('page_index', 0))
+            dont_mind_btn = st.button("Continue without this option / 이 옵션 없이 계속하십시오", on_click=update_session_state, args=("page_index", 0))
 
     if st.session_state['page_index'] == 0:
         # Home page
