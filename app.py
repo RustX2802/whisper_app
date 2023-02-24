@@ -1,6 +1,6 @@
 # Models
 import torch
-from transformers import pipeline, WhisperProcessor, WhisperForConditionalGeneration, BartForConditionalGeneration
+from transformers import pipeline, WhisperProcessor, WhisperForConditionalGeneration
 from pyannote.audio import Pipeline
 
 # Audio Manipulation
@@ -140,7 +140,7 @@ def load_models():
         try:
             summarizer = pickle.load(open("models/summarizer.sav", 'rb'))
         except FileNotFoundError:
-            summarizer = BartForConditionalGeneration.from_pretrained("ainize/kobart-news")
+            summarizer = pipeline("summarization", model="ainize/kobart-news")
 
     # Load Diarization model (Differentiate speakers)
     with st.spinner("Loading Diarization Model / 분할 모델 로드 중"):
@@ -1114,7 +1114,7 @@ def extract_audio_from_yt_video(url):
         filename = None
 
     return filename
-
+"""
 if __name__ == '__main__':
     config()
 
@@ -1156,3 +1156,4 @@ if __name__ == '__main__':
     elif st.session_state['page_index'] == 2:
         # Rename speakers page
         rename_speakers_window()
+        """
