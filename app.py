@@ -8,6 +8,8 @@ import audioread
 from pydub import AudioSegment, silence
 import youtube_dl
 from youtube_dl import DownloadError
+import yt_dlp
+from yt_dlp import DownloadError
 
 # Others
 import pandas as pd
@@ -27,13 +29,13 @@ def config():
 
     # Initialize session state variables
     if 'page_index' not in st.session_state:
-        st.session_state['page_index'] = -1
-        st.session_state['audio_file'] = None
-        st.session_state["process"] = []
-        st.session_state['txt_transcript'] = ""
-        st.session_state["start_time"] = 0
-        st.session_state['srt_token'] = 0  # Is subtitles parameter enabled or not
+        st.session_state['page_index'] = -1  # Handle which page should be displayed (token page, home page, results page, rename page)
+        st.session_state['txt_transcript'] = ""  # Save the transcript as .txt so we can display it again on the results page
+        st.session_state["process"] = []  # Save the results obtained so we can display them again on the results page
         st.session_state['srt_txt'] = ""  # Save the transcript in a subtitles case to display it on the results page
+        st.session_state['srt_token'] = 0  # Is subtitles parameter enabled or not
+        st.session_state['audio_file'] = None  # Save the audio file provided by the user so we can display it again on the results page
+        st.session_state["start_time"] = 0  # Default audio player starting point (0s)
         st.session_state["summary"] = ""  # Save the summary of the transcript so we can display it on the results page
         st.session_state["number_of_speakers"] = 0  # Save the number of speakers detected in the conversation (diarization)
         st.session_state["chosen_mode"] = 0  # Save the mode chosen by the user (Diarization or not, timestamps or not)
@@ -70,7 +72,7 @@ def load_options(audio_length, dia_pipeline):
     reload when interacting with an element (frustrating if it does because user loses fluidity).
     :return: the chosen parameters
     """
-    # Create a st.form()
+    # Create an st.form()
     with st.form("form"):
         st.markdown("""<h6>
             You can transcript a specific part of your audio by setting start and end values below (in seconds). Then, 
@@ -84,7 +86,7 @@ def load_options(audio_length, dia_pipeline):
         with col2:
             end = st.slider("End value (s) / 종료 값(초)", 0, audio_length, value=audio_length)
 
-        # Create 3 new columns to displayed other options
+        # Create 3 new columns to display other options
         col1, col2, col3 = st.columns(3)
 
         # User selects his preferences with checkboxes
@@ -161,7 +163,7 @@ def transcript_from_url(stt_tokenizer, stt_model, summarizer, dia_pipeline):
         if filename is not None:
             transcription(stt_tokenizer, stt_model, summarizer, dia_pipeline, filename)
         else:
-            st.error("We were unable to extract the audio. Please verify your link, retry or choose another video / 오디오를 추출할 수 없습니다. 링크를 확인하고 다시 시도하거나 다른 동영상을 선택하세요.")
+            st.error("We were unable to extract the audio. Please verify your link, retry or choose another video / 오디오를 추출할 수 없습니다. 링크를 확인하고 다시 시도하거나 다른 동영상을 선택하세요")
 
 def transcript_from_file(stt_tokenizer, stt_model, summarizer, dia_pipeline):
 
@@ -274,10 +276,10 @@ def transcription(stt_tokenizer, stt_model, summarizer, dia_pipeline, filename, 
                     txt_text = create_txt_text_from_process()
                 # Non diarization Mode
                 else:
-                    my_split_text_list = split_text(txt_text, 512)
+                    my_split_text_list = split_text(txt_text, 448)
                     txt_text = ""
                     for my_split_text in my_split_text_list:
-                        txt_text += my_split_text
+                                txt_text += my_split_text
 
                 # Delete files
                 clean_directory("../data")  # clean folder that contains generated files
@@ -295,13 +297,13 @@ def transcription(stt_tokenizer, stt_model, summarizer, dia_pipeline, filename, 
                         with st.spinner("We are summarizing your audio / 오디오를 요약하고 있습니다"):
                             # Display summary in a st.expander widget to don't write too much text on the page
                             with st.expander("Summary / 요약"):
-                                # Need to split the text by 512 text blocks size since the model has a limited input
+                                # Need to split the text by 142 text blocks size since the model has a limited input
                                 if diarization_token:
                                     # In diarization mode, the text to summarize is contained in the "summary" session state variable
-                                    my_split_text_list = split_text(st.session_state["summary"], 512)
+                                    my_split_text_list = split_text(st.session_state["summary"], 142)
                                 else:
                                     # In non-diarization mode, it is contained in the txt_text
-                                    my_split_text_list = split_text(txt_text, 512)
+                                    my_split_text_list = split_text(txt_text, 142)
 
                                 summary = ""
                                 # Summarize each text block
@@ -362,23 +364,20 @@ def transcription(stt_tokenizer, stt_model, summarizer, dia_pipeline, filename, 
 
 def create_txt_text_from_process():
     """
-    If we are in a diarization case (differentiate speakers), we create txt_text from st.session.state['process']
-    There is a lot of information in the process variable, but we only extract the identity of the speaker and
-    the sentence spoken, as in a non-diarization case.
+    Extracts speaker identities and spoken sentences from a process list and returns a formatted transcript.
+    :param process: List of tuples, where each tuple represents a spoken sentence with speaker identity and timestamp.
     :return: Final transcript (without timestamps)
     """
+    
     txt_text = ""
-    # The information to be extracted is different according to the chosen mode
-    if st.session_state["chosen_mode"] == "DIA":
-        for elt in st.session_state["process"]:
-            txt_text += elt[1] + elt[2] + '\n\n'
-
-    elif st.session_state["chosen_mode"] == "DIA_TS":
-        for elt in st.session_state["process"]:
-            txt_text += elt[2] + elt[3] + '\n\n'
-
+    process = st.session_state.get("process", [])
+    for elt in process:
+        if len(elt) < 3:
+            continue
+        speaker, sentence = elt[1], elt[2][2:]
+        txt_text += f"{speaker}: {sentence}\n\n"
     return txt_text
-
+   
 def rename_speakers_window():
     """
     Load a new page which allows the user to rename the different speakers from the diarization process
@@ -541,8 +540,8 @@ def silence_mode_init(srt_token):
 
     else:
 
-        min_space = 10000  # 10 secs
-        max_space = 30000  # 30secs
+        min_space = 25000  # 25 secs
+        max_space = 45000  # 45 secs
     return min_space, max_space
 
 def detect_silences(audio):
@@ -684,19 +683,23 @@ def init_transcription(start, end):
     return txt_text, srt_text, save_result
 
 def transcribe_audio_part(filename, stt_model, stt_tokenizer, myaudio, sub_start, sub_end, index):
+    stt_model = "openai/whisper-large-v2"
+    stt_tokenizer = "openai/whisper-large-v2"
     device = 0 if torch.cuda.is_available() else "cpu"
+
+    pipe = pipeline(
+                task="automatic-speech-recognition",
+                model=stt_model,
+                tokenizer=stt_tokenizer,
+                chunk_length_s=30,
+                device=device,
+            )
+    
     try:
         with torch.no_grad():
             new_audio = myaudio[sub_start:sub_end]  # Works in milliseconds
             path = filename[:-3] + "audio_" + str(index) + ".mp3"
             new_audio.export(path)  # Exports to a mp3 file in the current path
-            
-            pipe = pipeline(
-                task="automatic-speech-recognition",
-                model="openai/whisper-large-v2",
-                chunk_length_s=30,
-                device=device,
-            )
 
             # Decode
             transcription = pipe(path)["text"]
@@ -1106,7 +1109,8 @@ def extract_audio_from_yt_video(url):
             }],
         }
         with st.spinner("We are extracting the audio from the video / 비디오에서 오디오를 추출하고 있습니다"):
-            with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+            #with youtube_dl.YoutubeDL(ydl_opts) as ydl:
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 ydl.download([url])
 
     # Handle DownloadError: ERROR: unable to download video data: HTTP Error 403: Forbidden / happens sometimes
@@ -1114,46 +1118,3 @@ def extract_audio_from_yt_video(url):
         filename = None
 
     return filename
-"""
-if __name__ == '__main__':
-    config()
-
-    if st.session_state['page_index'] == -1:
-        # Specify token page (mandatory to use the diarization option)
-        st.warning('You must specify a token to use the diarization model. Otherwise, the app will be launched without this model. You can learn how to create your token here: https://huggingface.co/pyannote/speaker-diarization / 분할 모델을 사용하려면 토큰을 지정해야 합니다. 그렇지 않으면 이 모델 없이 앱이 실행됩니다. 여기에서 토큰을 만드는 방법을 배울 수 있습니다: https://huggingface.co/pyannote/speaker-diarization')
-        text_input = st.text_input("Enter your Hugging Face token: / Hugging Face 토큰을 입력하세요:", placeholder="ACCESS_TOKEN_GOES_HERE", type="password")
-
-        # Confirm or continue without the option
-        col1, col2 = st.columns(2)
-
-        # Save changes button
-        with col1:
-            confirm_btn = st.button("I have changed my token / 토큰을 변경했습니다", on_click=confirm_token_change, args=(text_input, 0), disabled=st.session_state["disable"])
-            # if text is changed, button is clickable
-            if text_input != "ACCESS_TOKEN_GOES_HERE":
-                st.session_state["disable"] = False
-
-        # Continue without a token (there will be no diarization option)
-        with col2:
-            dont_mind_btn = st.button("Continue without this option / 이 옵션 없이 계속하십시오", on_click=update_session_state, args=("page_index", 0))
-
-    if st.session_state['page_index'] == 0:
-        # Home page
-        choice = st.radio("Features / 특징", ["By a video URL / 비디오 URL로", "By uploading a file / 파일을 업로드하여"]) 
-
-        stt_tokenizer, stt_model, summarizer, dia_pipeline = load_models()
-
-        if choice == "By a video URL / 비디오 URL로":
-            transcript_from_url(stt_tokenizer, stt_model, summarizer, dia_pipeline)
-
-        elif choice == "By uploading a file / 파일을 업로드하여":
-            transcript_from_file(stt_tokenizer, stt_model, summarizer, dia_pipeline)
-
-    elif st.session_state['page_index'] == 1:
-        # Display Results page
-        display_results()
-
-    elif st.session_state['page_index'] == 2:
-        # Rename speakers page
-        rename_speakers_window()
-        """

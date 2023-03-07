@@ -3,8 +3,6 @@ This script allows you to download the models used by our speech to text app fro
 """
 from transformers import pipeline, WhisperProcessor, WhisperForConditionalGeneration
 import pickle
-import torch
-
 
 def load_models():
     # 1 - Whisper Speech to Text Model
@@ -30,7 +28,6 @@ def load_models():
                 open("/workspace/models/STT_processor2_whisper-large.sav", 'wb'))
 
     # 4 - Diarization model - Can't be saved anymore since pyannote.audio v2
-
 
 if __name__ == '__main__':
     load_models()
