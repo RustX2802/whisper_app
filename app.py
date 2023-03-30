@@ -685,7 +685,7 @@ def init_transcription(start, end):
 def transcribe_audio_part(filename, stt_model, stt_tokenizer, myaudio, sub_start, sub_end, index):
     stt_model = "openai/whisper-large-v2"
     stt_tokenizer = "openai/whisper-large-v2"
-    device = 0 if torch.cuda.is_available() else "cpu"
+    device = "cuda:0" if torch.cuda.is_available() else "cpu"
 
     pipe = pipeline(
                 task="automatic-speech-recognition",
@@ -702,7 +702,7 @@ def transcribe_audio_part(filename, stt_model, stt_tokenizer, myaudio, sub_start
             new_audio.export(path)  # Exports to a mp3 file in the current path
 
             # Decode
-            transcription = pipe(path)["text"]
+            transcription = pipe(path, generate_kwargs={"language": "korean", "task": "transcribe"})["text"]
             return transcription
 
     except audioread.NoBackendError:
@@ -837,7 +837,7 @@ def get_diarization(dia_pipeline, filename):
     :return: str list containing audio's diarization time intervals
     """
     # Get diarization of the audio
-    diarization = dia_pipeline({'audio': filename})
+    diarization = dia_pipeline({'audio': filename}, num_speakers=2)
     listmapping = diarization.labels()
     listnewmapping = []
 
