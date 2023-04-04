@@ -7,32 +7,15 @@
 
 ## Requirements
 
-To deploy your app, you need:
-
-- An access to the [OVHcloud Control Panel](https://www.ovh.com/auth/?action=gotomanager&from=https://www.ovh.co.uk/&ovhSubsidiary=GB).
-- An AI Deploy Project created inside a [Public Cloud project](https://www.ovhcloud.com/en-gb/public-cloud/) in your OVHcloud account
-- A [user for AI Deploy](https://docs.ovh.com/gb/en/publiccloud/ai/users/).
-- [The OVHcloud AI CLI](https://cli.bhs.training.ai.cloud.ovh.net/) **and** [Docker](https://www.docker.com/get-started) installed on your local computer, **or** only an access to a Debian Docker Instance on the [Public Cloud](https://www.ovh.com/manager/public-cloud/).
-- To deploy your app, you must have the full code of the application, either by cloning the [GitHub repository](https://github.com/ovh/ai-training-examples/tree/main/apps/streamlit/speech-to-text), or by having followed our [blog article](https://blog.ovhcloud.com/how-to-build-a-speech-to-text-application-with-python-1-3/) that taught you how to build this app step by step.
 - If you want the diarization option (speakers differentiation), you will need an access token. This token will be requested at the launch of the application. To create your token, follow the steps indicated on the [model page](https://huggingface.co/pyannote/speaker-diarization). If the token is not specified, the application will be launched without this feature.
 
 
 ## Instructions
 
-You are going to follow different steps to deploy your **Streamlit Speech to Text application**:
-
-- **Write & Install** the libraries and packages in our environment so that our application can work.
-- **Write the `Dockerfile`** that contains all the commands to launch our speech to text app.
-- **Build the Docker image** from the Dockerfile
-- **(Optional) - Import the models and save them locally** in an *Object Storage (volume)* to speed up the initialization of the app.
-- **Deploy your app**.
-
-*If you have cloned the [GitHub repository](https://github.com/ovh/ai-training-examples/tree/main/apps/streamlit/speech-to-text), you will not need to rewrite the files (requirements.txt, and Dockerfile) since you already have them. In this case, you can go directly to the "Build the Docker image" step, even if it is better to understand the global operation.*
-
 ### Write the requirements.txt file for the application
 
-The `requirements.txt` file will allow us to write all the modules needed by our application. This file will be useful for the `Dockerfile`. 
-Put this file (and the next ones) in the same directory as your python scripts.
+The `requirements.txt` file will allow us to write all the modules needed by our application. 
+Put this file in the same directory as your python scripts.
 
 ```console
 librosa==0.9.1
