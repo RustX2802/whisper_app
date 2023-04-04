@@ -2,15 +2,7 @@
 
 ![Overview](images/speech-to-text.png)
 
-## Objective
-
-The purpose of this documentation is to **Deploy the Speech to Text Application** we have realised in our [blog article](https://blog.ovhcloud.com/how-to-build-a-speech-to-text-application-with-python-1-3/) using [Streamlit](https://streamlit.io/) and pre-trained models. 
-
-Deploying your app will allow you to benefit from **very powerful resources** which will make the speech to text application extremely fast. It can also be easily shared, unlike a local application.
-
-Here, the use case is **English Speech Recognition**, but you can choose another model as explained in our [blog article](https://blog.ovhcloud.com/how-to-build-a-speech-to-text-application-with-python-1-3/). Some models work with Chinese, French, German, Japanese, Russian, etc.
-
-### Overview of the Speech to text app (Click image to see all features):
+### Overview of the Speech to text app:
 [![Overview](images/speech-to-text-app-overview.png)](https://youtu.be/R_CjNtPLw7M)
 
 ## Requirements
