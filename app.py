@@ -6,8 +6,6 @@ from pyannote.audio import Pipeline
 # Audio Manipulation
 import audioread
 from pydub import AudioSegment, silence
-import youtube_dl
-from youtube_dl import DownloadError
 import yt_dlp
 from yt_dlp import DownloadError
 
