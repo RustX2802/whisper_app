@@ -1,4 +1,3 @@
-youtube_dl
 librosa==0.9.1
 yt-dlp
 streamlit
