@@ -52,7 +52,7 @@ RUN pip install -r requirements.txt
 Once your environment is set up, define your default launching command to start the application:
 
 ```console
-CMD [ "streamlit" , "run" , "/main.py", "--server.address=0.0.0.0" ]
+CMD [ "streamlit" , "run" , "main.py", "--server.address=0.0.0.0" ]
 ```
 
 ### Import the models and save them locally (Optional)
